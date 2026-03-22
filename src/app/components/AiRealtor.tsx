@@ -27,27 +27,27 @@ export default function AiRealtor() {
   return (
     <section className="relative w-full bg-white pt-24 pb-32">
       {/* Faint dot background pattern over the bottom portion */}
-      <div 
-        className="absolute inset-x-0 bottom-0 h-[250px] pointer-events-none opacity-40" 
-        style={{ 
-          backgroundImage: 'radial-gradient(#9ca3af 1px, transparent 1px)', 
-          backgroundSize: '24px 24px' 
+      <div
+        className="absolute inset-x-0 bottom-0 h-[250px] pointer-events-none opacity-40"
+        style={{
+          backgroundImage: 'radial-gradient(#9ca3af 1px, transparent 1px)',
+          backgroundSize: '24px 24px'
         }}
       />
-      
+
       <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8">
         <h2 className="text-4xl md:text-[40px] font-bold tracking-tight text-center mb-16 text-black">
           Your Free Personal AI Realtor
         </h2>
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-start">
           {/* Left: AI Image Placeholder */}
           <div className="w-full flex justify-center items-center mt-6">
             <div className="relative w-full max-w-[450px] aspect-[4/3] flex items-center justify-center">
               {/* Replace with the actual SVG once saved to public folder */}
-              <img 
-                src="/ai-robot.svg" 
-                alt="AI Realtor Robot" 
+              <img
+                src="/ai-robot.svg"
+                alt="AI Realtor Robot"
                 className="w-full h-full object-contain"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
@@ -59,7 +59,7 @@ export default function AiRealtor() {
               />
             </div>
           </div>
-          
+
           {/* Right: Features List */}
           <div className="w-full flex flex-col pl-0 lg:pl-4">
             {features.map((feature, idx) => (
@@ -73,7 +73,7 @@ export default function AiRealtor() {
                 </p>
               </div>
             ))}
-            
+
             {/* Button Container */}
             <div className="border-t border-gray-200 pt-8 mt-2">
               <button className="w-full bg-[#f97316] hover:bg-[#ea580c] transition-colors text-white py-4 rounded-xl font-semibold text-lg duration-300">
