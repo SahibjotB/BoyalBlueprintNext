@@ -13,13 +13,17 @@ export async function identifyIntent(userQuery:string): Promise<IntentResult> {
     - other: This intent is for queries that do not fit into the above categories
 
     When you receive a user query, analyze the content and determine the most appropriate intent. Provide a confidence score for your classification, which should be a number between 0 and 1, indicating how confident you are in your classification.
-
-    return JSON: 
-    {
-        "intent": property_search | real_estate | other,
-        "confidence": number (0 to 1)
-    }
     `;
+
+    /*
+        Not needed schema in system prompt most likely:
+        
+        return JSON: 
+        {
+            "intent": property_search | real_estate | other,
+            "confidence": number (0 to 1)
+        }
+    */
 
     // Define the expected schema for the LLM response to ensure we get structured data back that we can work with
     const intentResultSchema = {

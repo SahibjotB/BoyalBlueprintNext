@@ -17,5 +17,5 @@ export type ChatResult =
     }
 |   {
         type: "test2";
-        message: string;
+        message: number;
     };
