@@ -7,7 +7,7 @@ export type Intent =
 
 export type IntentResult = {
     intent: Intent;
-    confidenceInterval: number;
+    confidence: number;
 };
 
 export type ChatResult = 

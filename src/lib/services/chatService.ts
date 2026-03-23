@@ -20,12 +20,12 @@ const intent = await identifyIntent(userQuery);
         // Return with ChatResult type makes it easy to handle what comes back in the front end and ensures we have a consistent format for all responses
         case "property_search":
             // passing the type here lets us know what to expect and what is required to be sent back such as a string message here but could be more complex types as well with more data for the front end to work with
-            return { type: "test", message: "this is a response for property search intent" };
+            return { type: "test", message: `this is a response for property search intent with confidence: ${intent.confidence}`};
         case "real_estate":
-            return { type: "test", message: "this is a response for real estate intent" };
+            return { type: "test", message: `this is a response for real estate intent with confidence: ${intent.confidence}` };
         case "other":
-            return { type: "test", message: "this is a response for other intent" };
+            return { type: "test", message: `this is a response for other intent with confidence: ${intent.confidence}` };
         default:
-            return { type: "test", message: "could not classify intent" };
+            return { type: "test", message: `could not classify intent with confidence: ${intent.confidence}` };
     }
 }
