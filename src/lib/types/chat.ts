@@ -19,3 +19,9 @@ export type ChatResult =
         type: "test2";
         message: number;
     };
+
+export type ExtractResult = {
+    filters: Record<string, unknown>;
+    needsClarification: boolean;
+    missingFields: string[];
+}
