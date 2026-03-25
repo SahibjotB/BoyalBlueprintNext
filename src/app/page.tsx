@@ -2,7 +2,7 @@
 
 import Spline from '@splinetool/react-spline';
 import AiRealtor from './components/AiRealtor';
-
+import RentOrBuy from './components/RentOrBuy';
 export default function Home() {
   return (
     <div className="flex flex-col w-full">
@@ -73,6 +73,7 @@ export default function Home() {
       </main>
 
       <AiRealtor />
+      <RentOrBuy />
     </div>
   );
 }

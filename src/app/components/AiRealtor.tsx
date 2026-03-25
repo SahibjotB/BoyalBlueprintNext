@@ -1,4 +1,5 @@
 import React from 'react';
+import Spline from '@splinetool/react-spline';
 
 const features = [
   {
@@ -42,20 +43,10 @@ export default function AiRealtor() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-start">
           {/* Left: AI Image Placeholder */}
-          <div className="w-full flex justify-center items-center mt-6">
-            <div className="relative w-full max-w-[450px] aspect-[4/3] flex items-center justify-center">
-              {/* Replace with the actual SVG once saved to public folder */}
-              <img
-                src="/ai-robot.svg"
-                alt="AI Realtor Robot"
-                className="w-full h-full object-contain"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  const fallback = document.createElement('div');
-                  fallback.className = "w-full h-[300px] flex items-center justify-center bg-gray-50 border-2 border-dashed border-gray-300 rounded-3xl p-6 text-center text-gray-500 font-medium";
-                  fallback.innerHTML = "Please save the SVG code you pasted as<br/><strong class='text-black relative z-20 mt-2'>public/ai-robot.svg</strong><br/>to display the robot graphic here!";
-                  e.currentTarget.parentElement?.appendChild(fallback);
-                }}
+          <div className="w-full flex justify-center items-center">
+            <div className="relative w-full max-w-[1500px] aspect-[1/1] flex items-center justify-center">
+              <Spline
+                scene="https://prod.spline.design/sLzpBWwtdtXkXMHr/scene.splinecode"
               />
             </div>
           </div>
