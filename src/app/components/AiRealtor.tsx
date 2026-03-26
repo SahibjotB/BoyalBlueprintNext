@@ -1,5 +1,6 @@
 import React from 'react';
 import Spline from '@splinetool/react-spline';
+import { Typewriter } from "react-simple-typewriter";
 
 const features = [
   {
@@ -37,22 +38,40 @@ export default function AiRealtor() {
       />
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8">
-        <h2 className="text-4xl md:text-[40px] font-bold tracking-tight text-center mb-16 text-black">
+        <h2 className="text-4xl md:text-[40px] font-bold tracking-tight text-center mb-4 text-black">
           Your Free Personal AI Realtor
         </h2>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
           {/* Left: AI Image Placeholder */}
-          <div className="w-full flex justify-center items-center">
+          <div className="w-full flex justify-center items-center grid grid-row-2 pb-8">
             <div className="relative w-full max-w-[1500px] aspect-[1/1] flex items-center justify-center">
               <Spline
                 scene="https://prod.spline.design/sLzpBWwtdtXkXMHr/scene.splinecode"
               />
             </div>
+            <h2 className="text-2xl md:text-3xl font-semibold text-black">
+              Have questions about{" "}
+              <span className="text-[#f97316] font-semibold">
+                <Typewriter
+                  words={[
+                    "Real Estate?",
+                    "buying a house?",
+                    "selling a house?",
+                  ]}
+                  loop={0}
+                  cursor
+                  cursorStyle="|"
+                  typeSpeed={80}
+                  deleteSpeed={50}
+                  delaySpeed={1500}
+                />
+              </span>
+            </h2>
           </div>
 
           {/* Right: Features List */}
-          <div className="w-full flex flex-col pl-0 lg:pl-4">
+          <div className="w-full flex flex-col pt-8">
             {features.map((feature, idx) => (
               <div key={idx} className="border-t border-gray-200 py-6">
                 <div className="flex justify-between items-center mb-3">

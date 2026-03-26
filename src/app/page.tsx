@@ -3,6 +3,9 @@
 import Spline from '@splinetool/react-spline';
 import AiRealtor from './components/AiRealtor';
 import RentOrBuy from './components/RentOrBuy';
+import ResourcesSection from './components/ResourcesSection';
+import ConsultationSection from './components/ConsultationSection';
+
 export default function Home() {
   return (
     <div className="flex flex-col w-full">
@@ -81,6 +84,8 @@ export default function Home() {
 
       <AiRealtor />
       <RentOrBuy />
+      <ResourcesSection />
+      <ConsultationSection />
     </div>
   );
 }
