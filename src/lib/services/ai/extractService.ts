@@ -1,6 +1,6 @@
 /* Call this with user query to build system prompt to identify intent */
 
-import { ExtractResult} from "@/lib/types/chat";
+import { ExtractLLMResult, ExtractResult, FilterItem} from "@/lib/types/chat";
 import { generateOutput } from "./llmService";
 import { findRelevantAttributes } from "@/lib/utils/attributeSelector";
 
@@ -30,7 +30,7 @@ export async function extractPropertyValues(userQuery:string): Promise<ExtractRe
          - "under X" -> ListPriceMax
          - "over X" -> ListPriceMin
 
-        If City is missing, mark needsClarification = true and add "city" to missingFields array
+        If City is missing, mark needsClarification = true and add "city" to missingFields array otherwise needsClarification should be false and missingFields should be empty array if all needed fields are there.
     `;
 
     // Define the expected schema for the LLM response to ensure we get structured data back that we can work with
@@ -40,17 +40,27 @@ export async function extractPropertyValues(userQuery:string): Promise<ExtractRe
             type: "object",
             properties: {
                 filters: {
-                    type: "object",
-                    additionalProperties: true // allow for dynamic keys based on attributes with flexible values
-                },
-                needsClarification: {
-                    type: "boolean"
-                },
-                missingFields: {
                     type: "array",
                     items: {
-                        type: "string"
+                        type: "object",
+                        properties: {
+                            key: { type: "string" },
+                            value: {
+                                anyOf: [
+                                    { type: "string" },
+                                    { type: "number" },
+                                    { type: "boolean" }
+                                ]
+                            }
+                        },
+                        required: ["key", "value"],
+                        additionalProperties: false
                     }
+                },
+                needsClarification: { type: "boolean" },
+                missingFields: {
+                    type: "array",
+                    items: { type: "string" }
                 }
             },
             required: ["filters", "needsClarification", "missingFields"],
@@ -59,6 +69,27 @@ export async function extractPropertyValues(userQuery:string): Promise<ExtractRe
     }
     
     // call llm service with system prompt and user query, specify structured output with schema for expected return format
-    const response = await generateOutput<ExtractResult>({ systemPrompt, userPrompt: userQuery, schema: extractResultSchema });
-    return response;
+    const LLMResponse = await generateOutput<ExtractLLMResult>({ systemPrompt, userPrompt: userQuery, schema: extractResultSchema });
+    const normalizedFilters = normalizeFilters(LLMResponse.filters);
+    
+    const extractResponse = {
+        filters: normalizedFilters,
+        needsClarification: LLMResponse.needsClarification,
+        missingFields: LLMResponse.missingFields
+    }
+
+    return extractResponse;
 }
+
+function normalizeFilters(filtersArray: FilterItem[]) {
+    const obj: Record<string, any> = {};             
+    for (const item of filtersArray) {
+        if (item.key == "City"){
+            item.value = (item.value as string).charAt(0).toUpperCase() + (item.value as string).slice(1).toLowerCase();
+        }
+        obj[item.key] = item.value;   
+    }
+    return obj;
+}
+
+

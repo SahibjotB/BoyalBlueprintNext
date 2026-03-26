@@ -21,7 +21,18 @@ export type ChatResult =
     };
 
 export type ExtractResult = {
-    filters: Record<string, unknown>;
+    filters: Record<string, string | number | boolean>;
+    needsClarification: boolean;
+    missingFields: string[];
+}
+
+export type FilterItem = {
+    key: string;
+    value: string | number | boolean;
+}
+
+export type ExtractLLMResult = {
+    filters: FilterItem[];
     needsClarification: boolean;
     missingFields: string[];
 }
