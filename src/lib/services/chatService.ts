@@ -24,7 +24,7 @@ const intent = await identifyIntent(userQuery);
             // calls to extraction service 
             const propertyFilters = await extractPropertyValues(userQuery);
             console.log("Extracted property filters:", propertyFilters);
-
+        
             const odataQueryString = await buildODataQuery(propertyFilters.filters);
             console.log("Generated OData query string:", odataQueryString);
 

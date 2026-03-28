@@ -20,19 +20,32 @@ export type ChatResult =
         message: number;
     };
 
-export type ExtractResult = {
-    filters: Record<string, string | number | boolean>;
-    needsClarification: boolean;
-    missingFields: string[];
-}
+export type PropertyOperator = 
+    | "eq"
+    | "gt"
+    | "ge"
+    | "lt"
+    | "le";
 
 export type FilterItem = {
     key: string;
     value: string | number | boolean;
+    operator: PropertyOperator;
 }
-
 export type ExtractLLMResult = {
     filters: FilterItem[];
     needsClarification: boolean;
     missingFields: string[];
 }
+
+export type FilterMap = Record<string, {value: string | number | boolean; operator: PropertyOperator}>;
+
+export type ExtractResult = {
+    filters: FilterMap;
+    needsClarification: boolean;
+    missingFields: string[];
+}
+
+
+
+

@@ -1,6 +1,6 @@
 /* Call this with user query to build system prompt to identify intent */
 
-import { ExtractLLMResult, ExtractResult, FilterItem} from "@/lib/types/chat";
+import { ExtractLLMResult, ExtractResult, FilterItem, FilterMap} from "@/lib/types/chat";
 import { generateOutput } from "./llmService";
 import { findRelevantAttributes } from "@/lib/utils/attributeSelector";
 
@@ -26,10 +26,12 @@ export async function extractPropertyValues(userQuery:string): Promise<ExtractRe
         - Convert natural language into structured filters
         - Boolean fields is true/false
         - Numbers must be numbers 
-        - Handle price:
-         - "under X" -> ListPriceMax
-         - "over X" -> ListPriceMin
-
+        - When extracting filters, always include an operator:
+            - "more than, "over", "above", "atleast", "minimum" or similar means "ge"
+            - "less than", "under", "below", "maximum" or similar means "le"
+            - "equal to", "exactly", "is" or similar means "eq"
+            - otherwise default to eq if its not clear 
+            
         If City is missing, mark needsClarification = true and add "city" to missingFields array otherwise needsClarification should be false and missingFields should be empty array if all needed fields are there.
     `;
 
@@ -51,9 +53,13 @@ export async function extractPropertyValues(userQuery:string): Promise<ExtractRe
                                     { type: "number" },
                                     { type: "boolean" }
                                 ]
+                            },
+                            operator: {
+                                type: "string",
+                                enum: ["eq", "gt", "ge", "lt", "le"]
                             }
                         },
-                        required: ["key", "value"],
+                        required: ["key", "value", "operator"],
                         additionalProperties: false
                     }
                 },
@@ -81,13 +87,16 @@ export async function extractPropertyValues(userQuery:string): Promise<ExtractRe
     return extractResponse;
 }
 
-function normalizeFilters(filtersArray: FilterItem[]) {
-    const obj: Record<string, any> = {};             
+function normalizeFilters(filtersArray: FilterItem[]): FilterMap {
+    const obj: FilterMap = {};             
     for (const item of filtersArray) {
         if (item.key == "City"){
             item.value = (item.value as string).charAt(0).toUpperCase() + (item.value as string).slice(1).toLowerCase();
         }
-        obj[item.key] = item.value;   
+        obj[item.key] = {
+            value: item.value,
+            operator: item.operator
+        }
     }
     return obj;
 }
