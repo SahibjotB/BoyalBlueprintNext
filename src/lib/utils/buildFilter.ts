@@ -21,25 +21,29 @@ export function buildODataQuery(filters: FilterMap) {
         // add on the conditionals with fall back helpers (this combines the fallback with default with an or and contains clause)
         if (key === "BedroomsTotal" && typeof value.value === "number") {
             // get the variations of bedroom with helper function
-            const variants = generateBedroomFallback(value.value);
+            // const variants = generateBedroomFallback(value.value);
 
-            const fallbackQuery = variants.map(
-                variant => `contains(PublicRemarks, '${variant}')`
-            );
-            console.log(fallbackQuery);
-            console.log(odataQueryString);
-            odataQueryString.push(`(BedroomsTotal ${value.operator} ${value.value} or ${fallbackQuery.join(" or ")})`);
+            // const fallbackQuery = variants.map(
+            //     variant => `contains(PublicRemarks, '${variant}')`
+            // );
+
+            const fallbackQuery = [""];
+            odataQueryString.push(`(BedroomsTotal ${value.operator} ${value.value})`);
+            //odataQueryString.push(`(BedroomsTotal ${value.operator} ${value.value} or ${fallbackQuery.join(" or ")})`);
             continue;
         } 
 
         if (key === "BathroomsTotalInteger" && typeof value.value === "number") {
             // get the variations of washroom with helper function
-            const variants = generateWashroomFallback(value.value);
+            // const variants = generateWashroomFallback(value.value);
 
-            const fallbackQuery = variants.map(
-                variant => `contains(PublicRemarks, '${variant}')`
-            );
-            odataQueryString.push(`(BathroomsTotalInteger ${value.operator}  ${value.value} or ${fallbackQuery.join(" or ")})`);
+            // const fallbackQuery = variants.map(
+            //     variant => `contains(PublicRemarks, '${variant}')`
+            // );
+
+            const fallbackQuery = [""];
+            odataQueryString.push(`(BathroomsTotalInteger ${value.operator}  ${value.value})`);
+            //odataQueryString.push(`(BathroomsTotalInteger ${value.operator}  ${value.value} or ${fallbackQuery.join(" or ")})`);
             continue;
         } 
 
@@ -97,6 +101,7 @@ function generateBedroomFallback(value: number): string[] {
         word ? `${word} bedrooms` : "",
         word ? `${word} bdrm` : "",
         word ? `${word} bdrms` : "",
+
     ].filter(Boolean);
 }
 
@@ -122,10 +127,24 @@ function generateWashroomFallback(value: number): string[] {
 }
 
 function generateSqftFallback(value: number): string[] {
+    const numberVariant = value.toLocaleString("en-US");
+
     return [
         `${value} sqft`,
         `${value} sq ft`,
         `${value} square feet`,
-        `${value} Sqft`
+        `${value} Sqft`,
+        `${value}sqft`,
+        `${value}sq ft`,
+        `${value}square feet`,
+        `${value}Sqft`,
+        `${numberVariant} sqft`,
+        `${numberVariant} sq ft`,
+        `${numberVariant} square feet`,
+        `${numberVariant} Sqft`,
+        `${numberVariant}sqft`,
+        `${numberVariant}sq ft`,
+        `${numberVariant}square feet`,
+        `${numberVariant}Sqft`,
     ].filter(Boolean);
 }
