@@ -38,7 +38,7 @@ export type ExtractLLMResult = {
     missingFields: string[];
 }
 
-export type FilterMap = Record<string, {value: string | number | boolean; operator: PropertyOperator}>;
+export type FilterMap = Record<string, {value: string | number | boolean; operator: PropertyOperator;}>;
 
 export type ExtractResult = {
     filters: FilterMap;

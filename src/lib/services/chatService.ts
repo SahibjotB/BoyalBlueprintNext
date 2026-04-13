@@ -12,6 +12,10 @@ import { identifyIntent } from "./ai/intentService";
 
 */
 
+// figure out pre-context
+// have an if- logged in flag (display info at the top)
+// have a flag for passed property context (feed that in at the start when its triggered) -> reset when not.. 
+
 // Expand to handle session context and saving 
 export async function handleChat(userQuery: string): Promise<ChatResult> {
 
@@ -28,6 +32,19 @@ const intent = await identifyIntent(userQuery);
             const odataQueryString = await buildODataQuery(propertyFilters.filters);
             console.log("Generated OData query string:", odataQueryString);
 
+            // call Property API with query
+
+            // propertyService (1 function returns property objects array)
+            
+
+            // call PropertyRooms API with ID from property and update with room (hash map)
+                // propertyService (rooms function returns rooms object map that you can set to property array item here)
+
+            // call Media API with ID from property and update with media array (hash map)
+                // propertyService (media function returns media object map that you can set to property array item here)
+
+            // Return array of Property objects (show a few of them and say you can view more listings and save them (login prompt?))
+    
             return { type: "test", message: `queryString: ${odataQueryString}`};
         case "real_estate":
             return { type: "test", message: `this is a response for real estate intent with confidence: ${intent.confidence}` };
