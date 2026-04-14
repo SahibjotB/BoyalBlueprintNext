@@ -98,7 +98,7 @@ export type Property = {
     roof: string[] | null;
 
     // property room end point
-    RoomList: Room[] | null;
+    RoomList: Room[] | undefined;
 
     // Continued Property fields
     roomsTotal: number | null;
@@ -122,5 +122,5 @@ export type Property = {
     waterfrontExists: boolean | null;
 
     // media endpoint
-    mediaImages: string[] | null;
+    mediaImages: string[] | undefined;
 }
