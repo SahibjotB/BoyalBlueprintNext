@@ -17,6 +17,46 @@ export async function fetchPropertiesWithRoomsMedia(odataQuery: string, resultCo
         cache: "no-store",
     });
 
+    // somehow get a batch return on media images. Map. Loop through property objects and match
+    
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`MLS Property request failed- (${response.status}): ${errorText}`)
+    }
+    // get response json data
+    const jsonData = await response.json();
+
+    const mediaList = jsonData.value;
+
+    // loop through the mediaList, map the ID and the largest image URL 
+
+    const mediaMap = new Map<string, string[]>();
+
+    for (const mediaItem of mediaList) {
+        // update the array of image urls for the propertyID, adding them on if not there
+        // ensure the image isn't already there, look for size largest and add that
+        // technically if I just check the size being largest and push that URL it won't matter that imageID
+        // this would get us every large image in the list for each propertyID
+        if (!mediaMap.get(mediaItem.ResourceRecordKey)) {
+            mediaMap.set(mediaItem.ResourceRecordKey, []);
+        }
+
+        // get existing array in map and push values into it
+        // only do this if the image is the largest for that property
+        if (mediaItem.ImageSizeDescription == "Largest") {
+            mediaMap.get(mediaItem.ResourceRecordKey)?.push(mediaItem.MediaURL)            
+        }
+
+    }
+
+    // loop through and update each of the property with list of rooms and list of media images
+    for (const property of rawProperties) {
+        property.RoomList = roomPropertyMap.get(property.id)
+       
+        // map media here in a similar manner (gets array of media URLs for that id from the map) 
+        property.mediaImages = mediaMap.get(property.id)
+    }
+
     return rawProperties;
 }
 
