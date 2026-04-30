@@ -6,31 +6,30 @@ export default function AiSearchPage() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Main Content Area */}
-      {/* Background gradient from white to a soft peach/orange */}
       <main className="flex-1 w-full bg-gradient-to-b from-white from-30% via-[#fef4ed] to-[#FCE4D6] flex flex-col pt-24">
         {/* Ribbon Image - Pulling it up slightly to overlap with the empty top space */}
-        <div className="w-full max-w-[1400px] mx-auto px-4 -mt-6 md:-mt-12 lg:-mt-20 z-0">
-          <Image 
-            src="/ai-robot.svg" 
-            alt="Real Estate Path" 
-            width={2000} 
-            height={1000} 
-            className="w-full h-auto object-contain"
+        <div className="w-full -mt-12 md:-mt-24 lg:-mt-40 z-0">
+          <Image
+            src="/ai-background.png"
+            alt="Real Estate Path"
+            width={2579}
+            height={589}
+            className="w-full h-auto mix-blend-multiply"
             priority
           />
         </div>
 
         {/* Text and Search Container */}
-        <div className="w-full max-w-4xl mx-auto px-4 flex flex-col items-center text-center -mt-4 pb-20 z-10">
+        <div className="w-full max-w-5xl mx-auto px-4 flex flex-col items-center text-center -mt-16 md:-mt-32 lg:-mt-96 pb-20 z-10 relative">
           <h1 className="text-5xl md:text-[80px] font-serif text-black leading-[1.1] tracking-tight mb-16">
-            Describe the home you are<br/>looking for...
+            Describe the home you are<br />looking for...
           </h1>
 
           {/* Search Input Container */}
           <div className="relative w-full max-w-[850px] mb-14">
             <div className="relative flex items-center w-full bg-transparent border border-black rounded-full p-2 h-[75px] md:h-[85px]">
-              <input 
-                type="text" 
+              <input
+                type="text"
                 className="flex-1 bg-transparent border-none outline-none text-xl md:text-3xl text-black px-6 h-full"
               />
               <button className="relative flex-shrink-0 flex items-center justify-center bg-[#E5A57A] border border-black h-full aspect-[1.3] rounded-[28px] hover:bg-[#D9956A] transition-colors">
