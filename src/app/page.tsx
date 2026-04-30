@@ -29,19 +29,46 @@ export default function Home() {
 
           {/* 3 Glass Spheres tracking the path */}
           <div
-            className="absolute left-[25%] top-[63%] w-[70px] h-[70px] md:w-[90px] md:h-[90px] rounded-full pointer-events-auto backdrop-blur-lg border border-white/40 bg-gradient-to-br from-white/30 via-[rgba(242,80,21,0.1)] to-[rgba(242,80,21,0.3)] shadow-[inset_0_4px_8px_rgba(255,255,255,0.4),0_20px_25px_rgba(0,0,0,0.15)] op"
+            className="absolute left-[25%] top-[63%] group pointer-events-auto flex items-center"
             style={{ transform: 'translate(-50%, -50%)' }}
-          />
+          >
+            <button
+              onClick={() => document.getElementById('airealtor')?.scrollIntoView({ behavior: 'smooth' })}
+              className="w-[70px] h-[70px] md:w-[90px] md:h-[90px] rounded-full backdrop-blur-lg border border-white/40 bg-gradient-to-br from-white/30 via-[rgba(242,80,21,0.1)] to-[rgba(242,80,21,0.3)] shadow-[inset_0_4px_8px_rgba(255,255,255,0.4),0_20px_25px_rgba(0,0,0,0.15)] cursor-pointer group-hover:scale-110 group-hover:shadow-[0_25px_35px_rgba(242,80,21,0.2)] transition-all duration-300"
+              aria-label="Scroll to AI Realtor"
+            />
+            <span className="absolute left-full ml-4 px-4 py-2 bg-white/90 backdrop-blur-md text-black font-semibold rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none whitespace-nowrap shadow-lg border border-white/50 text-sm md:text-base translate-x-[-10px] group-hover:translate-x-0">
+              AI Realtor
+            </span>
+          </div>
 
           <div
-            className="absolute left-[46%] top-[68%] w-[50px] h-[50px] md:w-[65px] md:h-[65px] rounded-full pointer-events-auto backdrop-blur-md border border-white/40 bg-gradient-to-br from-white/30 via-[rgba(242,80,21,0.1)] to-[rgba(242,80,21,0.3)] shadow-[inset_0_3px_6px_rgba(255,255,255,0.4),0_15px_20px_rgba(0,0,0,0.15)]"
+            className="absolute left-[46%] top-[68%] group pointer-events-auto flex items-center"
             style={{ transform: 'translate(-50%, -50%)' }}
-          />
+          >
+            <button
+              onClick={() => document.getElementById('resources')?.scrollIntoView({ behavior: 'smooth' })}
+              className="w-[50px] h-[50px] md:w-[65px] md:h-[65px] rounded-full backdrop-blur-md border border-white/40 bg-gradient-to-br from-white/30 via-[rgba(242,80,21,0.1)] to-[rgba(242,80,21,0.3)] shadow-[inset_0_3px_6px_rgba(255,255,255,0.4),0_15px_20px_rgba(0,0,0,0.15)] cursor-pointer group-hover:scale-110 group-hover:shadow-[0_20px_30px_rgba(242,80,21,0.2)] transition-all duration-300"
+              aria-label="Scroll to Resources"
+            />
+            <span className="absolute left-full ml-4 px-4 py-2 bg-white/90 backdrop-blur-md text-black font-semibold rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none whitespace-nowrap shadow-lg border border-white/50 text-sm md:text-base translate-x-[-10px] group-hover:translate-x-0">
+              Resources
+            </span>
+          </div>
 
           <div
-            className="absolute left-[64%] top-[76%] w-[35px] h-[35px] md:w-[45px] md:h-[45px] rounded-full pointer-events-auto backdrop-blur-sm border border-white/40 bg-gradient-to-br from-white/30 via-[rgba(242,80,21,0.1)] to-[rgba(242,80,21,0.3)] shadow-[inset_0_2px_4px_rgba(255,255,255,0.4),0_10px_15px_rgba(0,0,0,0.15)]"
+            className="absolute left-[64%] top-[76%] group pointer-events-auto flex items-center"
             style={{ transform: 'translate(-50%, -50%)' }}
-          />
+          >
+            <button
+              onClick={() => document.getElementById('consultation')?.scrollIntoView({ behavior: 'smooth' })}
+              className="w-[35px] h-[35px] md:w-[45px] md:h-[45px] rounded-full backdrop-blur-sm border border-white/40 bg-gradient-to-br from-white/30 via-[rgba(242,80,21,0.1)] to-[rgba(242,80,21,0.3)] shadow-[inset_0_2px_4px_rgba(255,255,255,0.4),0_10px_15px_rgba(0,0,0,0.15)] cursor-pointer group-hover:scale-110 group-hover:shadow-[0_15px_20px_rgba(242,80,21,0.2)] transition-all duration-300"
+              aria-label="Scroll to Consultation"
+            />
+            <span className="absolute left-full ml-4 px-4 py-2 bg-white/90 backdrop-blur-md text-black font-semibold rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none whitespace-nowrap shadow-lg border border-white/50 text-sm md:text-base translate-x-[-10px] group-hover:translate-x-0">
+              Consultation
+            </span>
+          </div>
         </div>
 
         {/* Hero Content */}
@@ -82,10 +109,10 @@ export default function Home() {
         </div>
       </main>
 
-      <AiRealtor />
+      <div id="airealtor" className="w-full scroll-mt-20"><AiRealtor /></div>
       <RentOrBuy />
-      <ResourcesSection />
-      <ConsultationSection />
+      <div id="resources" className="w-full scroll-mt-20"><ResourcesSection /></div>
+      <div id="consultation" className="w-full scroll-mt-20"><ConsultationSection /></div>
     </div>
   );
 }

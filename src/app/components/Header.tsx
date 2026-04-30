@@ -1,9 +1,31 @@
+'use client';
+
 import Image from 'next/image';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 export default function Header() {
+  const [hideHeader, setHideHeader] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      // Check if the user has scrolled to the bottom of the page
+      const isBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 50;
+      setHideHeader(isBottom);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll(); // Initial check
+    
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
-    <header className="absolute top-0 left-0 w-full z-50 flex items-center justify-between py-6 px-12 bg-transparent">
+    <header 
+      className={`fixed top-0 left-0 w-full z-50 flex items-center justify-between py-6 px-12 bg-transparent transition-transform duration-500 ease-in-out ${
+        hideHeader ? '-translate-y-full' : 'translate-y-0'
+      }`}
+    >
       <Link href="/">
         <Image
           src="/boyal-blueprint-black.png"

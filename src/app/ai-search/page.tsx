@@ -6,7 +6,7 @@ export default function AiSearchPage() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Main Content Area */}
-      <main className="flex-1 w-full bg-gradient-to-b from-white from-30% via-[#fef4ed] to-[#FCE4D6] flex flex-col pt-24">
+      <main className="flex-1 w-full bg-gradient-to-b from-[#FCE4D6] from-30% via-[#fef4ed] to-white flex flex-col pt-24">
         {/* Ribbon Image - Pulling it up slightly to overlap with the empty top space */}
         <div className="w-full -mt-12 md:-mt-24 lg:-mt-40 z-0">
           <Image
