@@ -57,6 +57,7 @@ export async function fetchPropertiesWithRoomsMedia(odataQuery: string, resultCo
         property.mediaImages = mediaMap.get(property.id)
     }
 
+    // TODO: Figure out array indices syntax 
     return rawProperties;
 }
 
@@ -241,3 +242,7 @@ async function fetchMLSRoomProperties(webAPIAddress: string | undefined, propert
     }
     return roomMap;
 }
+
+/* Refine property search function */
+// LLM function with properties passed through (stored array in storage)
+// Figure out where and how to save user content and field values 
