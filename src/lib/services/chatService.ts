@@ -2,6 +2,8 @@ import { ChatResult } from "../types/chat";
 import { buildODataQuery } from "../utils/buildFilter";
 import { extractPropertyValues } from "./ai/extractService";
 import { identifyIntent } from "./ai/intentService";
+import { answerRealEstateQuestions } from "./ai/realEstateAdviceService";
+import { fetchPropertiesWithRoomsMedia } from "./propertyService";
 
 /* 
     The full orchetrator of handling all chat calls from chat API route when called in from front-end 
@@ -19,8 +21,10 @@ import { identifyIntent } from "./ai/intentService";
 // Expand to handle session context and saving 
 export async function handleChat(userQuery: string): Promise<ChatResult> {
 
-// 1) Classify intent of message with intent service
-const intent = await identifyIntent(userQuery);
+    // 1) Classify intent of message with intent service
+    const intent = await identifyIntent(userQuery);
+
+    // 2) Act upon the identified intent with different behaviors for chat returns
     switch(intent.intent) {
         // Return with ChatResult type makes it easy to handle what comes back in the front end and ensures we have a consistent format for all responses
         case "property_search":
@@ -34,23 +38,18 @@ const intent = await identifyIntent(userQuery);
 
             // call Property API with query
 
-            // propertyService (1 function returns property objects array)
-            
-
-            // call PropertyRooms API with ID from property and update with room (hash map)
-                // propertyService (rooms function returns rooms object map that you can set to property array item here)
-
-            // call Media API with ID from property and update with media array (hash map)
-                // propertyService (media function returns media object map that you can set to property array item here)
-
-            // Return array of Property objects (show a few of them and say you can view more listings and save them (login prompt?))
+            const propertiesList = await fetchPropertiesWithRoomsMedia(odataQueryString, 5);
     
-            return { type: "test", message: `queryString: ${odataQueryString}`};
+            // Return array of Property objects (show a few of them and say you can view more listings and save them (login prompt?))
+            return { type: "propertyList", message: propertiesList };
+
         case "real_estate":
-            return { type: "test", message: `this is a response for real estate intent with confidence: ${intent.confidence}` };
+            const realEstateResponse = await answerRealEstateQuestions(userQuery)
+            return { type: "baseString", message: realEstateResponse.response };
+            
         case "other":
-            return { type: "test", message: `this is a response for other intent with confidence: ${intent.confidence}` };
+            return { type: "baseString", message: `this is a response for other intent with confidence: ${intent.confidence}` };
         default:
-            return { type: "test", message: `could not classify intent with confidence: ${intent.confidence}` };
+            return { type: "baseString", message: `could not classify intent with confidence: ${intent.confidence}` };
     }
 }

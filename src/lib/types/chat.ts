@@ -10,6 +10,10 @@ export type IntentResult = {
     confidence: number;
 };
 
+export type BaseResult = {
+    response: string
+}
+
 export type ChatResult = 
 |   {
         type: "test";
