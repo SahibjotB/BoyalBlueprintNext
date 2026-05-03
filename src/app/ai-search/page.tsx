@@ -1,21 +1,54 @@
-import Image from "next/image";
+'use client';
+
 import Link from "next/link";
 import { Bot } from "lucide-react";
+import { useEffect, useRef } from "react";
 
 export default function AiSearchPage() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    let rafId: number;
+
+    const checkTime = () => {
+      // Stop the video 0.5 seconds before the very end. 
+      // This ensures we freeze on a fully visible frame before any blank frames or native end behavior occurs.
+      if (video.duration && video.currentTime >= video.duration - 0.5) {
+        video.pause();
+      } else {
+        rafId = requestAnimationFrame(checkTime);
+      }
+    };
+
+    video.addEventListener('play', () => {
+      rafId = requestAnimationFrame(checkTime);
+    });
+
+    // If it's already playing by the time this runs
+    if (!video.paused) {
+      rafId = requestAnimationFrame(checkTime);
+    }
+
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+    };
+  }, []);
   return (
     <div className="flex flex-col min-h-screen">
       {/* Main Content Area */}
       <main className="flex-1 w-full bg-gradient-to-b from-[#FCE4D6] from-30% via-[#fef4ed] to-white flex flex-col pt-24">
-        {/* Ribbon Image - Pulling it up slightly to overlap with the empty top space */}
-        <div className="w-full -mt-12 md:-mt-24 lg:-mt-40 z-0">
-          <Image
-            src="/ai-background.png"
-            alt="Real Estate Path"
-            width={2579}
-            height={589}
+        {/* Ribbon Video - Pulling it up slightly to overlap with the empty top space */}
+        <div className="w-full -mt-12 md:-mt-24 lg:-mt-92 z-0">
+          <video
+            ref={videoRef}
+            src="/Ai-Page.webm"
+            autoPlay
+            muted
+            playsInline
             className="w-full h-auto mix-blend-multiply"
-            priority
           />
         </div>
 
