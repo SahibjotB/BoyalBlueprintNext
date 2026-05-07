@@ -1,5 +1,7 @@
 // Any mapping for dataTypes can be exported types here. Makes it easier to reference anywhere
 
+import { Property } from "./property";
+
 export type Intent = 
 | "property_search"
 | "real_estate"
@@ -16,12 +18,12 @@ export type BaseResult = {
 
 export type ChatResult = 
 |   {
-        type: "test";
+        type: "baseString";
         message: string;
     }
 |   {
-        type: "test2";
-        message: number;
+        type: "propertyList";
+        message: Property[];
     };
 
 export type PropertyOperator = 
