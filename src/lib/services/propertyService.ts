@@ -246,3 +246,12 @@ async function fetchMLSRoomProperties(webAPIAddress: string | undefined, propert
 /* Refine property search function */
 // LLM function with properties passed through (stored array in storage)
 // Figure out where and how to save user content and field values 
+
+
+// Fetch Singular property
+// Property with ID -> Same functions as above except with IDs 
+export async function getPropertyByID(listingID: string): Promise<Property> {
+    const odataQuery = `ListingKey eq '${listingID}'`;
+    const property = await fetchPropertiesWithRoomsMedia(odataQuery, 1);
+    return property[0];
+}
