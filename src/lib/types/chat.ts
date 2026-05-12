@@ -5,11 +5,14 @@ import { Property } from "./property";
 export type Intent = 
 | "property_search"
 | "real_estate"
+| "clarification"
+| "refinement"
+| "specific_property"
 | "other";
 
 export type IntentResult = {
     intent: Intent;
-    confidence: number;
+    confidence?: number;
 };
 
 export type BaseResult = {

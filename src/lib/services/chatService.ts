@@ -1,4 +1,4 @@
-import { ChatResult } from "../types/chat";
+import { ChatResult, Intent, IntentResult } from "../types/chat";
 import { buildODataQuery } from "../utils/buildFilter";
 import { extractPropertyValues } from "./ai/extractService";
 import { identifyIntent } from "./ai/intentService";
@@ -19,10 +19,10 @@ import { fetchPropertiesWithRoomsMedia } from "./propertyService";
 // have a flag for passed property context (feed that in at the start when its triggered) -> reset when not.. 
 
 // Expand to handle session context and saving 
-export async function handleChat(userQuery: string): Promise<ChatResult> {
+export async function handleChat(userQuery: string, passedIntent?: IntentResult): Promise<ChatResult> {
 
-    // 1) Classify intent of message with intent service
-    const intent = await identifyIntent(userQuery);
+    // 1) Classify intent of message with intent service (or use passed intent if available from front end context)
+    const intent = passedIntent ?? await identifyIntent(userQuery);
 
     // 2) Act upon the identified intent with different behaviors for chat returns
     switch(intent.intent) {
@@ -47,9 +47,19 @@ export async function handleChat(userQuery: string): Promise<ChatResult> {
         case "real_estate":
             const realEstateResponse = await answerRealEstateQuestions(userQuery)
             return { type: "baseString", message: realEstateResponse.response };
-            
+
+        case "clarification":
+            return { type: "baseString", message: `this is a response for clarification intent with confidence: ${intent.confidence}` };
+
+        case "refinement":
+            return { type: "baseString", message: `this is a response for refinement intent with confidence: ${intent.confidence}` };
+
+        case "specific_property":
+            return { type: "baseString", message: `this is a response for refinement intent with confidence: ${intent.confidence}` };
+        
         case "other":
             return { type: "baseString", message: `this is a response for other intent with confidence: ${intent.confidence}` };
+        
         default:
             return { type: "baseString", message: `could not classify intent with confidence: ${intent.confidence}` };
     }
