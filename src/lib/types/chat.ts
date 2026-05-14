@@ -55,6 +55,8 @@ export type ExtractResult = {
     missingFields: string[];
 }
 
-
-
-
+export type ChatHistoryItem = {
+    sender: string;
+    response: string;
+    intent: Intent;
+}
