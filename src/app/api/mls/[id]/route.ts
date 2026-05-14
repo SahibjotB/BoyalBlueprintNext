@@ -9,11 +9,15 @@ type RouteContext = {
 };
 
 export async function GET(req: NextRequest, context: RouteContext) {
-  const listingID = context.params .id;
+  
+  const params = await context.params;
+
+  const listingID = params.id;
 
   const property = await getPropertyByID(listingID);
 
   return NextResponse.json(property);
+
 }
 
 // Use IDs to fetch specific properties
