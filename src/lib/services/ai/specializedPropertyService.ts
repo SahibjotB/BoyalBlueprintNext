@@ -9,7 +9,7 @@ export async function answerSpecializedPropertyQuestions (userQuery: string, pro
 
     // Instructions for how the AI should take the user query and work with it
     const systemPrompt = 
-    `You are an expert on real estate, helping answer questions for new home buyers, explaining things in simple terms on the buying process, finances, mortgages and anything real estate relevant to this specific house. Answer any questions using the context of this property's descriptors: %${JSON.stringify(property)}%` 
+    `You are an expert on real estate, helping answer questions for new home buyers. Answer any questions using the context of this property's descriptors: %${JSON.stringify(property)}%` 
 
     // Define the expected schema for the LLM response to ensure we get structured data back that we can work with
     const baseResponseSchema = {
