@@ -60,3 +60,15 @@ export type ChatHistoryItem = {
     response: string;
     intent: Intent;
 }
+
+export type ChatContext = {
+  intent?: IntentResult;
+
+  selectedPropertyId?: string;
+
+  previousSearch?: ChatHistoryItem;
+
+  missingFields?: string[];
+
+  additionalContent?: string;
+};
