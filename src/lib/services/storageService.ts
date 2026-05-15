@@ -16,9 +16,14 @@ export function getSavedProperties(): Property[] {
     }
     return [];
 }
-
+ 
 export function clearSavedProperties() {
     sessionStorage.removeItem(PROPERTY_RESULTS_KEY);
+}
+
+export function getProperty(propertyID: string): Property | null {
+    const properties = getSavedProperties();
+    return properties.find((p) => p.id === propertyID) || null;
 }
 
 /* Chat History Functions */
