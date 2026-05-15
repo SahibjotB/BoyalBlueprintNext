@@ -1,10 +1,12 @@
-import { ChatResult, Intent, IntentResult } from "../types/chat";
+import { ChatResult, Intent, IntentResult, ChatContext } from "../types/chat";
+import { Property } from "../types/property";
 import { buildODataQuery } from "../utils/buildFilter";
 import { extractPropertyValues } from "./ai/extractService";
 import { identifyIntent } from "./ai/intentService";
 import { answerRealEstateQuestions } from "./ai/realEstateAdviceService";
+import { answerSpecializedPropertyQuestions } from "./ai/specializedPropertyService";
 import { fetchPropertiesWithRoomsMedia } from "./propertyService";
-
+import { getProperty } from "./storageService";
 /* 
     The full orchetrator of handling all chat calls from chat API route when called in from front-end 
         - Handles intent & calls different services and functions based on intent classification
@@ -19,10 +21,10 @@ import { fetchPropertiesWithRoomsMedia } from "./propertyService";
 // have a flag for passed property context (feed that in at the start when its triggered) -> reset when not.. 
 
 // Expand to handle session context and saving 
-export async function handleChat(userQuery: string, passedIntent?: IntentResult): Promise<ChatResult> {
+export async function handleChat(userQuery: string, context?: ChatContext): Promise<ChatResult> {
 
     // 1) Classify intent of message with intent service (or use passed intent if available from front end context)
-    const intent = passedIntent ?? await identifyIntent(userQuery);
+    const intent = context?.intent ?? await identifyIntent(userQuery);
 
     // 2) Act upon the identified intent with different behaviors for chat returns
     switch(intent.intent) {
@@ -49,13 +51,22 @@ export async function handleChat(userQuery: string, passedIntent?: IntentResult)
             return { type: "baseString", message: realEstateResponse.response };
 
         case "clarification":
+
+            // figure out what needs to happen here... respond to the user with a string to clarify and capture that in the front end and feed it back into the function with the new user query and maybe the intent if we want to skip re-classifying intent with the new query since we know its just a clarification of the previous intent
             return { type: "baseString", message: `this is a response for clarification intent with confidence: ${intent.confidence}` };
 
         case "refinement":
+            // take past property array context, pass it all in to filter, return property array back based on that refinement from the user query 
             return { type: "baseString", message: `this is a response for refinement intent with confidence: ${intent.confidence}` };
 
         case "specific_property":
-            return { type: "baseString", message: `this is a response for refinement intent with confidence: ${intent.confidence}` };
+            // take singular property context, pass it all in to property LLM, return answers as a string
+            const specificProperty = getProperty(context?.selectedPropertyId ?? "") as Property;
+            
+            // call function, pass these things --> that function has the system prompt for it and calls the LLM and returns the response for that specific property question
+            const response = await answerSpecializedPropertyQuestions(userQuery, specificProperty);
+
+            return { type: "baseString", message: response.response };
         
         case "other":
             return { type: "baseString", message: `this is a response for other intent with confidence: ${intent.confidence}` };
