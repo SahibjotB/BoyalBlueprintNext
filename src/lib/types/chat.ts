@@ -10,6 +10,7 @@ export type Intent =
 | "specific_property"
 | "other";
 
+/* Types for LLM Service to return */
 export type IntentResult = {
     intent: Intent;
     confidence?: number;
@@ -19,15 +20,29 @@ export type BaseResult = {
     response: string
 }
 
+export type PropertyRefinementResult = {
+    ids: string[];
+}
+
+/* Types for chat service to return to front end with consistent format for handling in the front end and rendering */
 export type ChatResult = 
 |   {
-        type: "baseString";
-        message: string;
+        type: "refinement";
+        propertyIds: string[];
     }
 |   {
-        type: "propertyList";
-        message: Property[];
+        type: "specific_property";
+        property: Property;
+    }
+|   {
+        type: "text";
+        content: string;
+    }
+|   {
+        type: "property_search";
+        properties: Property[];
     };
+
 
 export type PropertyOperator = 
     | "eq"

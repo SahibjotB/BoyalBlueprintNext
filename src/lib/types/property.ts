@@ -124,3 +124,11 @@ export type Property = {
     // media endpoint
     mediaImages: string[] | undefined;
 }
+
+export type PropertyWithoutMedia = Omit<Property, "mediaImages">;
+
+// transformer function
+export function stripMediaData(properties: Property[]): PropertyWithoutMedia[] {
+    return properties.map(({ mediaImages, ...rest }) => rest);
+}
+
