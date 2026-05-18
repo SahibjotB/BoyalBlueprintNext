@@ -5,26 +5,44 @@ import { Property } from "./property";
 export type Intent = 
 | "property_search"
 | "real_estate"
+| "clarification"
+| "refinement"
+| "specific_property"
 | "other";
 
+/* Types for LLM Service to return */
 export type IntentResult = {
     intent: Intent;
-    confidence: number;
+    confidence?: number;
 };
 
 export type BaseResult = {
     response: string
 }
 
+export type PropertyRefinementResult = {
+    ids: string[];
+}
+
+/* Types for chat service to return to front end with consistent format for handling in the front end and rendering */
 export type ChatResult = 
 |   {
-        type: "baseString";
-        message: string;
+        type: "refinement";
+        propertyIds: string[];
     }
 |   {
-        type: "propertyList";
-        message: Property[];
+        type: "clarification";
+        content: string[];
+    }
+|   {
+        type: "text";
+        content: string;
+    }
+|   {
+        type: "property_search";
+        properties: Property[];
     };
+
 
 export type PropertyOperator = 
     | "eq"
@@ -52,6 +70,22 @@ export type ExtractResult = {
     missingFields: string[];
 }
 
+export type ChatHistoryItem = {
+    sender: string;
+    response: string;
+    intent: Intent;
+}
 
+export type ChatContext = {
+  intent?: IntentResult;
 
+  selectedPropertyId?: string;
 
+  previousSearch?: ChatHistoryItem;
+
+  missingFields?: string[];
+
+  additionalContent?: string;
+
+  propertyContext?: Property[];
+};

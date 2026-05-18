@@ -1,10 +1,13 @@
-import { ChatResult } from "../types/chat";
+import { ChatResult, Intent, IntentResult, ChatContext } from "../types/chat";
+import { Property, stripMediaData } from "../types/property";
 import { buildODataQuery } from "../utils/buildFilter";
 import { extractPropertyValues } from "./ai/extractService";
 import { identifyIntent } from "./ai/intentService";
+import { refinePropertySearch } from "./ai/propertySearchRefinementService";
 import { answerRealEstateQuestions } from "./ai/realEstateAdviceService";
+import { answerSpecializedPropertyQuestions } from "./ai/specializedPropertyService";
 import { fetchPropertiesWithRoomsMedia } from "./propertyService";
-
+import { getProperty, getSavedProperties } from "./storageService";
 /* 
     The full orchetrator of handling all chat calls from chat API route when called in from front-end 
         - Handles intent & calls different services and functions based on intent classification
@@ -18,11 +21,13 @@ import { fetchPropertiesWithRoomsMedia } from "./propertyService";
 // have an if- logged in flag (display info at the top)
 // have a flag for passed property context (feed that in at the start when its triggered) -> reset when not.. 
 
-// Expand to handle session context and saving 
-export async function handleChat(userQuery: string): Promise<ChatResult> {
+// HISTORY should I do it with UserQuery getting updated or stored history and then feed that in as context with the new user query each time? I think the second one is better for keeping track of the conversation and having that available for the LLM to use as context when needed instead of just the new user query each time which would lose a lot of the conversation history and context that could be relevant for the LLM to generate better responses.
 
-    // 1) Classify intent of message with intent service
-    const intent = await identifyIntent(userQuery);
+// Expand to handle session context and saving 
+export async function handleChat(userQuery: string, context?: ChatContext): Promise<ChatResult> {
+
+    // 1) Classify intent of message with intent service (or use passed intent if available from front end context)
+    const intent = context?.intent ?? await identifyIntent(userQuery);
 
     // 2) Act upon the identified intent with different behaviors for chat returns
     switch(intent.intent) {
@@ -40,17 +45,45 @@ export async function handleChat(userQuery: string): Promise<ChatResult> {
             // call Property API with query
 
             const propertiesList = await fetchPropertiesWithRoomsMedia(odataQueryString, 5);
-    
+
             // Return array of Property objects (show a few of them and say you can view more listings and save them (login prompt?))
-            return { type: "propertyList", message: propertiesList };
+            return { type: "property_search", properties: propertiesList };
 
         case "real_estate":
             const realEstateResponse = await answerRealEstateQuestions(userQuery)
-            return { type: "baseString", message: realEstateResponse.response };
+            return { type: "text", content: realEstateResponse.response };
+
+        case "clarification":
+
+            // figure out what needs to happen here... respond to the user with a string to clarify and capture that in the front end and feed it back into the function with the new user query and maybe the intent if we want to skip re-classifying intent with the new query since we know its just a clarification of the previous intent
+            return { type: "text", content: `this is a response for clarification intent with confidence: ${intent.confidence}` };
+
+        case "refinement":
+            // take past property array context, pass it all in to filter, return property array back based on that refinement from the user query 
+            const allProperties = getSavedProperties();
+
+            // take all the current properties, send it into LLM with the user query and instructions to refine the list based on the user query and return back a refined list of properties based on that
+
+            // function here with parameters, user query, and property list context --> that function has the system prompt for it and calls the LLM and returns the refined list of properties based on that user query refinement request
+
+            // const filteredProperties --> have a different return type. PropertyArray probably
+            const filteredPropertyIdsResponse = await refinePropertySearch(userQuery, stripMediaData(allProperties)); 
             
+            return { type: "refinement", propertyIds: filteredPropertyIdsResponse.ids };
+
+        case "specific_property":
+            // take singular property context, pass it all in to property LLM, return answers as a string
+            const specificProperty = getProperty(context?.selectedPropertyId ?? "") as Property;
+            
+            // call function, pass these things --> that function has the system prompt for it and calls the LLM and returns the response for that specific property question
+            const response = await answerSpecializedPropertyQuestions(userQuery, specificProperty);
+
+            return { type: "text", content: response.response };
+        
         case "other":
-            return { type: "baseString", message: `this is a response for other intent with confidence: ${intent.confidence}` };
+            return { type: "text", content: `this is a response for other intent with confidence: ${intent.confidence}` };
+        
         default:
-            return { type: "baseString", message: `could not classify intent with confidence: ${intent.confidence}` };
+            return { type: "text", content: `could not classify intent with confidence: ${intent.confidence}` };
     }
 }
