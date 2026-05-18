@@ -45,7 +45,7 @@ export async function handleChat(userQuery: string, context?: ChatContext): Prom
             // call Property API with query
 
             const propertiesList = await fetchPropertiesWithRoomsMedia(odataQueryString, 5);
-    
+
             // Return array of Property objects (show a few of them and say you can view more listings and save them (login prompt?))
             return { type: "property_search", properties: propertiesList };
 
@@ -56,7 +56,7 @@ export async function handleChat(userQuery: string, context?: ChatContext): Prom
         case "clarification":
 
             // figure out what needs to happen here... respond to the user with a string to clarify and capture that in the front end and feed it back into the function with the new user query and maybe the intent if we want to skip re-classifying intent with the new query since we know its just a clarification of the previous intent
-            return { type: "baseString", message: `this is a response for clarification intent with confidence: ${intent.confidence}` };
+            return { type: "text", content: `this is a response for clarification intent with confidence: ${intent.confidence}` };
 
         case "refinement":
             // take past property array context, pass it all in to filter, return property array back based on that refinement from the user query 
@@ -78,12 +78,12 @@ export async function handleChat(userQuery: string, context?: ChatContext): Prom
             // call function, pass these things --> that function has the system prompt for it and calls the LLM and returns the response for that specific property question
             const response = await answerSpecializedPropertyQuestions(userQuery, specificProperty);
 
-            return { type: "baseString", message: response.response };
+            return { type: "text", content: response.response };
         
         case "other":
-            return { type: "baseString", message: `this is a response for other intent with confidence: ${intent.confidence}` };
+            return { type: "text", content: `this is a response for other intent with confidence: ${intent.confidence}` };
         
         default:
-            return { type: "baseString", message: `could not classify intent with confidence: ${intent.confidence}` };
+            return { type: "text", content: `could not classify intent with confidence: ${intent.confidence}` };
     }
 }

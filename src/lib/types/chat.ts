@@ -31,8 +31,8 @@ export type ChatResult =
         propertyIds: string[];
     }
 |   {
-        type: "specific_property";
-        property: Property;
+        type: "clarification";
+        content: string[];
     }
 |   {
         type: "text";
@@ -86,4 +86,6 @@ export type ChatContext = {
   missingFields?: string[];
 
   additionalContent?: string;
+
+  propertyContext?: Property[];
 };
