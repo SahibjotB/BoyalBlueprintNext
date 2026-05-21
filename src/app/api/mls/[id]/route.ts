@@ -3,9 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getPropertyByID } from "@/lib/services/propertyService";
 
 type RouteContext = {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 };
 
 export async function GET(req: NextRequest, context: RouteContext) {
