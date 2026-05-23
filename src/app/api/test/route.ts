@@ -1,4 +1,4 @@
-import { handleChat } from '@/lib/services/chatService';
+import { handleChat, testIntent } from '@/lib/services/chatService';
 import { insertTestData } from '@/lib/services/database/test';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -22,8 +22,8 @@ export async function POST(request: NextRequest) {
   try {
     const data = await request.json(); 
     console.log(data.userQuery);
-    const response = await handleChat(data.userQuery);
-
+    console.log(data.context);
+    const response = await testIntent(data.userQuery, data.context);
     return NextResponse.json(response);
 
   } catch (error) {
