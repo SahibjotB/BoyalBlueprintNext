@@ -19,7 +19,7 @@ export async function generateOutput<T>({systemPrompt, userPrompt, schema} : Str
         const response = await openAIClient.responses.create({
             // can declare model selection and parameters here
             model: process.env.AZURE_OPENAI_MODEL,
-            temperature: 0,
+            //temperature: 0,
             // sends in system and user queries
             input: [
                 { role: "system", content: systemPrompt },
