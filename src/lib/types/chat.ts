@@ -68,27 +68,26 @@ export type ExtractResult = {
     filters: FilterMap;
     needsClarification: boolean;
     missingFields: string[];
-}
+};
 
 export type ChatHistoryItem = {
     sender: string;
     response: string;
     intent: Intent;
-}
+};
 
 export type ChatContext = {
-  intent?: IntentResult;
+    intent?: IntentResult;
 
-  selectedProperty: Property;
+    selectedProperty?: Property;
 
-  previousSearch?: ChatHistoryItem;
+    previousSearch?: ChatHistoryItem;
 
-  missingFields?: string[];
+    missingFields?: string[];
+    additionalContent?: string;
 
-  additionalContent?: string;
+    propertyListContext?: Property[];
 
-  propertyListContext?: Property[];
-
-  firstTimeRunFlag?: boolean;
+    firstTimeRunFlag?: boolean;
 
 };
