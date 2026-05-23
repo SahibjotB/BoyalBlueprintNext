@@ -79,7 +79,7 @@ export type ChatHistoryItem = {
 export type ChatContext = {
   intent?: IntentResult;
 
-  selectedPropertyId?: string;
+  selectedProperty: Property;
 
   previousSearch?: ChatHistoryItem;
 
@@ -87,5 +87,8 @@ export type ChatContext = {
 
   additionalContent?: string;
 
-  propertyContext?: Property[];
+  propertyListContext?: Property[];
+
+  firstTimeRunFlag?: boolean;
+
 };
