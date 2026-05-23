@@ -1,16 +1,16 @@
- import { NextRequest, NextResponse } from 'next/server';
+ import { handleChat } from '@/lib/services/chatService';
+import { NextRequest, NextResponse } from 'next/server';
 
-// Example POST handler for chat requests
 export async function POST(request: NextRequest) {
   try {
-    const { message } = await request.json(); // Expect a JSON body with a 'message' field
-
-    const response = `AI Response to: "${message}"`; // Simulate a reply
-
-    return NextResponse.json({ response });
+    const data = await request.json(); 
+    console.log(data.userQuery);
+    console.log(data.context);
+    const response = await handleChat(data.userQuery, data.context);
+    return NextResponse.json(response);
 
   } catch (error) {
-    console.error('Chat API error:', error);
+    console.error('Error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
