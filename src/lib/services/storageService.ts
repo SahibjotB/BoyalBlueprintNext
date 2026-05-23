@@ -40,6 +40,18 @@ export function getSavedChatContext(): ChatContext | null {
     return null;
 }
 
+/** Safe merge update */
+export function updateChatContext(patch: Partial<ChatContext>) {
+  const existing = getSavedChatContext() ?? {};
+
+  const updated: ChatContext = {
+    ...existing,
+    ...patch,
+  };
+
+  saveChatContext(updated);
+}
+
 /* Chat History Functions */
 export function saveChatHistory(chatHistory: ChatHistoryItem[]) {
     sessionStorage.setItem(CHAT_KEY, JSON.stringify(chatHistory));
