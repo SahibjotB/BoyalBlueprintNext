@@ -1,8 +1,9 @@
-import { ChatHistoryItem } from "../types/chat";
+import { ChatContext, ChatHistoryItem } from "../types/chat";
 import { Property } from "../types/property";
 
 const PROPERTY_RESULTS_KEY = "property_results";
 const CHAT_KEY = "chat_history";
+const CHAT_CONTEXT_KEY = "chat_context"
 
 /* Property Saving Functions */
 export function saveProperties(properties: Property[]) {
@@ -24,6 +25,19 @@ export function clearSavedProperties() {
 export function getProperty(propertyID: string): Property | null {
     const properties = getSavedProperties();
     return properties.find((p) => p.id === propertyID) || null;
+}
+
+/* Chat Context Functions */
+export function saveChatContext(chatContext: ChatContext) {
+    sessionStorage.setItem(CHAT_CONTEXT_KEY, JSON.stringify(chatContext))
+}
+
+export function getSavedChatContext(): ChatContext | null {
+    const chatContextJSON = sessionStorage.getItem(CHAT_KEY);
+    if (chatContextJSON) {
+        return JSON.parse(chatContextJSON) as ChatContext;
+    }
+    return null;
 }
 
 /* Chat History Functions */
