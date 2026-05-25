@@ -25,25 +25,25 @@ import { fetchPropertiesWithRoomsMedia } from "./propertyService";
 export async function testIntent(userQuery: string, context?: ChatContext): Promise<ChatResult> {
     const intent = context?.intent ?? await identifyIntent(userQuery, context?.firstTimeRunFlag);
     console.log(`this is the intent ${intent.intent}`);
-    return { type: "text", content: `this is a response for ${intent.intent} intent with confidence: ${intent.confidence}` }; 
+    return { type: "text", content: `this is a response for ${intent.intent} intent with confidence: ${intent.confidence}` };
 }
 
 // Expand to handle session context and saving 
 export async function handleChat(userQuery: string, context?: ChatContext): Promise<ChatResult> {
 
     // 1) Classify intent of message with intent service (or use passed intent if available from front end context)
-    const intent = context?.intent ?? await identifyIntent(userQuery);
+    const intent = context?.intent ?? await identifyIntent(userQuery, context?.firstTimeRunFlag);
 
     // 2) Act upon the identified intent with different behaviors for chat returns
-    switch(intent.intent) {
+    switch (intent.intent) {
         // Return with ChatResult type makes it easy to handle what comes back in the front end and ensures we have a consistent format for all responses
         case "property_search":
             // passing the type here lets us know what to expect and what is required to be sent back such as a string message here but could be more complex types as well with more data for the front end to work with
-            
+
             // calls to extraction service 
             const propertyFilters = await extractPropertyValues(userQuery);
             console.log("Extracted property filters:", propertyFilters);
-        
+
             const odataQueryString = await buildODataQuery(propertyFilters.filters);
             console.log("Generated OData query string:", odataQueryString);
 
@@ -72,8 +72,8 @@ export async function handleChat(userQuery: string, context?: ChatContext): Prom
 
                 // function here with parameters, user query, and property list context --> that function has the system prompt for it and calls the LLM and returns the refined list of properties based on that user query refinement request
                 // const filteredProperties --> have a different return type. PropertyArray probably
-                const filteredPropertyIdsResponse = await refinePropertySearch(userQuery, stripMediaData(allProperties)); 
-                
+                const filteredPropertyIdsResponse = await refinePropertySearch(userQuery, stripMediaData(allProperties));
+
                 return { type: "refinement", propertyIds: filteredPropertyIdsResponse.ids };
             } else {
                 return { type: "text", content: "Error: The propertyList is blank" };
@@ -84,7 +84,7 @@ export async function handleChat(userQuery: string, context?: ChatContext): Prom
             if (context?.selectedProperty != null) {
                 // take singular property context, pass it all in to property LLM, return answers as a string
                 const specificProperty = context?.selectedProperty;
-                
+
                 // call function, pass these things --> that function has the system prompt for it and calls the LLM and returns the response for that specific property question
                 const response = await answerSpecializedPropertyQuestions(userQuery, specificProperty);
 
@@ -93,10 +93,10 @@ export async function handleChat(userQuery: string, context?: ChatContext): Prom
                 return { type: "text", content: "Error: no specific property selected" };
             }
 
-        
+
         case "other":
             return { type: "text", content: `this is a response for other intent with confidence: ${intent.confidence}` };
-        
+
         default:
             return { type: "text", content: `could not classify intent with confidence: ${intent.confidence}` };
     }

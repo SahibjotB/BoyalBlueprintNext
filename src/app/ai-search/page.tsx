@@ -6,204 +6,17 @@ import { Bot, ArrowRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import PropertyDetailsModal from "../components/PropertyDetailsModal";
-
-interface MockProperty {
-  id: string;
-  mockId: number;
-  address: {
-    unparsedAddress: string;
-    city: string;
-    stateOrProvince: string;
-    postalCode: string;
-  };
-  listPrice: number;
-  bedroomsAboveGrade: number;
-  bathroomsTotal: number;
-  propertySubType: string;
-  approximateAge: string;
-  lotSizeArea: number | null;
-  rawSqftTotal: number;
-  associationFee: number | null;
-  propertyFeatures: string[];
-  mediaImages: string[];
-}
+import { Property } from "@/lib/types/property";
+import { saveProperties, getSavedProperties } from "@/lib/services/storageService";
 
 interface Message {
   id: string;
   sender: "user" | "bot";
   text: string;
-  properties?: MockProperty[];
+  properties?: Property[];
   showViewOnMap?: boolean;
   hasDotPrefix?: boolean;
 }
-
-// Mock properties matching "2 bedroom 2 bathroom house in Toronto under 500K"
-const torontoMockProperties: MockProperty[] = [
-  {
-    id: "TOR-1",
-    mockId: 1,
-    address: {
-      unparsedAddress: "102 Bloor St W #804",
-      city: "Toronto",
-      stateOrProvince: "ON",
-      postalCode: "M5S 1M8"
-    },
-    listPrice: 489000,
-    bedroomsAboveGrade: 2,
-    bathroomsTotal: 2,
-    propertySubType: "Condo Apartment",
-    approximateAge: "2012",
-    lotSizeArea: null,
-    rawSqftTotal: 850,
-    associationFee: 480,
-    propertyFeatures: ["MODERN KITCHEN", "BALCONY WITH VIEW", "24/7 SECURITY"],
-    mediaImages: ["/house_placeholder.png", "/house_placeholder.png", "/house_placeholder.png"],
-  },
-  {
-    id: "TOR-2",
-    mockId: 2,
-    address: {
-      unparsedAddress: "55 Front St E #1201",
-      city: "Toronto",
-      stateOrProvince: "ON",
-      postalCode: "M5E 1B3"
-    },
-    listPrice: 499000,
-    bedroomsAboveGrade: 2,
-    bathroomsTotal: 2,
-    propertySubType: "Condo Apartment",
-    approximateAge: "2015",
-    lotSizeArea: null,
-    rawSqftTotal: 900,
-    associationFee: 520,
-    propertyFeatures: ["OPEN CONCEPT LAYOUT", "GRANITE COUNTERTOPS", "CLOSE TO SUBWAY"],
-    mediaImages: ["/house_placeholder.png", "/house_placeholder.png", "/house_placeholder.png"],
-  },
-  {
-    id: "TOR-3",
-    mockId: 3,
-    address: {
-      unparsedAddress: "25 The Esplanade #405",
-      city: "Toronto",
-      stateOrProvince: "ON",
-      postalCode: "M5E 1W5"
-    },
-    listPrice: 475000,
-    bedroomsAboveGrade: 2,
-    bathroomsTotal: 2,
-    propertySubType: "Condo Apartment",
-    approximateAge: "2010",
-    lotSizeArea: null,
-    rawSqftTotal: 820,
-    associationFee: 460,
-    propertyFeatures: ["ROOFTOP PATIO ACCESS", "PARKING INCLUDED", "HARDWOOD FLOORS"],
-    mediaImages: ["/house_placeholder.png", "/house_placeholder.png", "/house_placeholder.png"],
-  },
-  {
-    id: "TOR-4",
-    mockId: 4,
-    address: {
-      unparsedAddress: "80 Queens Quay W #1509",
-      city: "Toronto",
-      stateOrProvince: "ON",
-      postalCode: "M5J 2Y5"
-    },
-    listPrice: 495000,
-    bedroomsAboveGrade: 2,
-    bathroomsTotal: 2,
-    propertySubType: "Condo Apartment",
-    approximateAge: "2018",
-    lotSizeArea: null,
-    rawSqftTotal: 880,
-    associationFee: 510,
-    propertyFeatures: ["LAKE VIEW", "FLOOR TO CEILING WINDOWS", "STAINLESS STEEL APPLIANCES"],
-    mediaImages: ["/house_placeholder.png", "/house_placeholder.png", "/house_placeholder.png"],
-  },
-  {
-    id: "TOR-5",
-    mockId: 5,
-    address: {
-      unparsedAddress: "15 Fort York Blvd #2208",
-      city: "Toronto",
-      stateOrProvince: "ON",
-      postalCode: "M5V 3Y3"
-    },
-    listPrice: 460000,
-    bedroomsAboveGrade: 2,
-    bathroomsTotal: 2,
-    propertySubType: "Condo Apartment",
-    approximateAge: "2014",
-    lotSizeArea: null,
-    rawSqftTotal: 800,
-    associationFee: 490,
-    propertyFeatures: ["IN-SUITE LAUNDRY", "INDOOR POOL ACCESS", "WALK-IN CLOSET"],
-    mediaImages: ["/house_placeholder.png", "/house_placeholder.png", "/house_placeholder.png"],
-  }
-];
-
-// Mock properties matching "semi-detached ones for cheaper"
-const semiDetachedMockProperties: MockProperty[] = [
-  {
-    id: "SEMI-1",
-    mockId: 1,
-    address: {
-      unparsedAddress: "12 Skyview Dr",
-      city: "Brampton",
-      stateOrProvince: "ON",
-      postalCode: "L6R 2K1"
-    },
-    listPrice: 420000,
-    bedroomsAboveGrade: 2,
-    bathroomsTotal: 2,
-    propertySubType: "Semi-Detached",
-    approximateAge: "2002",
-    lotSizeArea: 2500,
-    rawSqftTotal: 1100,
-    associationFee: null,
-    propertyFeatures: ["PRIVATE BACKYARD", "NEW ROOF (2021)", "SPACIOUS DRIVEWAY"],
-    mediaImages: ["/house_placeholder.png", "/house_placeholder.png", "/house_placeholder.png"],
-  },
-  {
-    id: "SEMI-2",
-    mockId: 2,
-    address: {
-      unparsedAddress: "45 Meadowvale Rd",
-      city: "Scarborough",
-      stateOrProvince: "ON",
-      postalCode: "M1C 1S7"
-    },
-    listPrice: 435000,
-    bedroomsAboveGrade: 2,
-    bathroomsTotal: 2,
-    propertySubType: "Semi-Detached",
-    approximateAge: "1995",
-    lotSizeArea: 3000,
-    rawSqftTotal: 1200,
-    associationFee: null,
-    propertyFeatures: ["FINISHED BASEMENT", "CLOSE TO PARKS", "UPGRADED BATHROOMS"],
-    mediaImages: ["/house_placeholder.png", "/house_placeholder.png", "/house_placeholder.png"],
-  },
-  {
-    id: "SEMI-3",
-    mockId: 3,
-    address: {
-      unparsedAddress: "88 Derry Rd E",
-      city: "Mississauga",
-      stateOrProvince: "ON",
-      postalCode: "L4T 1A1"
-    },
-    listPrice: 415000,
-    bedroomsAboveGrade: 2,
-    bathroomsTotal: 2,
-    propertySubType: "Semi-Detached",
-    approximateAge: "1998",
-    lotSizeArea: 2800,
-    rawSqftTotal: 1150,
-    associationFee: null,
-    propertyFeatures: ["RENO KITCHEN", "POT LIGHTS", "DECK IN YARD"],
-    mediaImages: ["/house_placeholder.png", "/house_placeholder.png", "/house_placeholder.png"],
-  }
-];
 
 export default function AiSearchPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -213,7 +26,7 @@ export default function AiSearchPage() {
   const [isSearched, setIsSearched] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
-  const [selectedProperty, setSelectedProperty] = useState<MockProperty | null>(null);
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
 
   // Manage video ending cleanly
   useEffect(() => {
@@ -277,118 +90,116 @@ export default function AiSearchPage() {
     }
   }, [messages, isTyping]);
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inputValue.trim()) return;
-
-    const queryText = inputValue;
-    setInputValue("");
-
-    if (!isSearched) {
-      // First Search transition
+  // Load saved properties on mount if coming back to refine
+  useEffect(() => {
+    const saved = getSavedProperties();
+    if (saved && saved.length > 0) {
       setIsSearched(true);
-
-      // Add user message
-      const userMsg: Message = {
-        id: `u-${Date.now()}`,
-        sender: "user",
-        text: queryText
-      };
-      setMessages([userMsg]);
-
-      // Trigger typing state
-      setIsTyping(true);
-
-      setTimeout(() => {
-        setIsTyping(false);
-        const botMsg: Message = {
-          id: `b-${Date.now()}`,
+      setMessages([
+        {
+          id: `init-refine-${Date.now()}`,
           sender: "bot",
-          text: "We found these 5 properties that match your criteria, would you like to view them on the map?",
-          properties: torontoMockProperties,
+          text: `I've loaded your list of ${saved.length} properties. Let me know how you'd like to refine or narrow them down (e.g., "must have finished basement" or "with a garage")!`,
+          properties: saved,
           showViewOnMap: true
-        };
-        setMessages(prev => [...prev, botMsg]);
-      }, 1200);
+        }
+      ]);
+    }
+  }, []);
 
-    } else {
-      // Follow-up search
-      const userMsg: Message = {
-        id: `u-${Date.now()}`,
-        sender: "user",
-        text: queryText
+  const sendMessageToBot = async (queryText: string) => {
+    if (!isSearched) {
+      setIsSearched(true);
+    }
+
+    // Add user message
+    const userMsg: Message = {
+      id: `u-${Date.now()}`,
+      sender: "user",
+      text: queryText
+    };
+
+    const currentMessages = [...messages, userMsg];
+    setMessages(prev => [...prev, userMsg]);
+    setIsTyping(true);
+
+    try {
+      // Gather property context from all previous message lists
+      const propertyListContext = messages.flatMap(m => m.properties || []);
+      const firstTimeRunFlag = messages.length === 0;
+
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userQuery: queryText,
+          context: {
+            propertyListContext: propertyListContext.length > 0 ? propertyListContext : undefined,
+            firstTimeRunFlag
+          }
+        })
+      });
+
+      const data = await res.json();
+      setIsTyping(false);
+
+      let botText = "I found some matching listings for you.";
+      let properties: Property[] = [];
+
+      if (data.type === "property_search") {
+        properties = data.properties || [];
+        botText = `We found ${properties.length} properties that match your criteria.`;
+        saveProperties(properties);
+      } else if (data.type === "text") {
+        botText = data.content;
+      } else if (data.type === "refinement") {
+        const existingProps = messages.flatMap(m => m.properties || []);
+        if (data.propertyIds && existingProps.length > 0) {
+          properties = existingProps.filter(p => data.propertyIds.includes(p.id));
+          botText = `I refined the list to the ${properties.length} matching properties.`;
+          saveProperties(properties);
+        } else {
+          botText = "I refined your search results.";
+        }
+      } else if (data.type === "clarification") {
+        botText = Array.isArray(data.content) ? data.content.join('\n') : data.content;
+      }
+
+      const botMsg: Message = {
+        id: `b-${Date.now()}`,
+        sender: "bot",
+        text: botText,
+        properties: properties.length > 0 ? properties : undefined,
+        showViewOnMap: properties.length > 0,
+        hasDotPrefix: currentMessages.length > 1
       };
-      setMessages(prev => [...prev, userMsg]);
 
-      setIsTyping(true);
-
-      setTimeout(() => {
-        setIsTyping(false);
-
-        // Custom replies based on search queries
-        const isSemiDetachedQuery = queryText.toLowerCase().includes("semi-detached") || queryText.toLowerCase().includes("semi detached") || queryText.toLowerCase().includes("cheaper");
-
-        const botMsg: Message = {
-          id: `b-${Date.now()}`,
-          sender: "bot",
-          text: isSemiDetachedQuery
-            ? "I updated the map view with some more results, take a look!"
-            : "I searched for options matching your updated criteria. Take a look at these new options!",
-          properties: isSemiDetachedQuery ? semiDetachedMockProperties : torontoMockProperties.slice(0, 3),
-          showViewOnMap: false,
-          hasDotPrefix: true
-        };
-        setMessages(prev => [...prev, botMsg]);
-      }, 1200);
+      setMessages(prev => [...prev, botMsg]);
+    } catch (error) {
+      console.error("Error calling chat API:", error);
+      setIsTyping(false);
+      const errorMsg: Message = {
+        id: `err-${Date.now()}`,
+        sender: "bot",
+        text: "Sorry, I encountered an error searching for listings. Please try again."
+      };
+      setMessages(prev => [...prev, errorMsg]);
     }
   };
 
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inputValue.trim()) return;
+    const queryText = inputValue;
+    setInputValue("");
+    sendMessageToBot(queryText);
+  };
+
   const handleSuggestionClick = (suggestionText: string) => {
-    setInputValue(suggestionText);
-    // Submit query
-    if (!isSearched) {
-      setIsSearched(true);
-      const userMsg: Message = {
-        id: `u-${Date.now()}`,
-        sender: "user",
-        text: suggestionText
-      };
-      setMessages([userMsg]);
-      setInputValue("");
-      setIsTyping(true);
-      setTimeout(() => {
-        setIsTyping(false);
-        const botMsg: Message = {
-          id: `b-${Date.now()}`,
-          sender: "bot",
-          text: "We found these 5 properties that match your criteria, would you like to view them on the map?",
-          properties: torontoMockProperties,
-          showViewOnMap: true
-        };
-        setMessages(prev => [...prev, botMsg]);
-      }, 1200);
-    } else {
-      const userMsg: Message = {
-        id: `u-${Date.now()}`,
-        sender: "user",
-        text: suggestionText
-      };
-      setMessages(prev => [...prev, userMsg]);
-      setInputValue("");
-      setIsTyping(true);
-      setTimeout(() => {
-        setIsTyping(false);
-        const botMsg: Message = {
-          id: `b-${Date.now()}`,
-          sender: "bot",
-          text: "I updated the map view with some more results, take a look!",
-          properties: semiDetachedMockProperties,
-          showViewOnMap: false,
-          hasDotPrefix: true
-        };
-        setMessages(prev => [...prev, botMsg]);
-      }, 1200);
-    }
+    setInputValue("");
+    sendMessageToBot(suggestionText);
   };
 
   return (
@@ -506,7 +317,7 @@ export default function AiSearchPage() {
                         {/* Property Thumbnails list */}
                         {msg.properties && msg.properties.length > 0 && (
                           <div className="flex gap-4 overflow-x-auto py-3 my-2 w-full scroll-smooth" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                            {msg.properties.map((prop) => (
+                            {msg.properties.slice(0, 4).map((prop) => (
                               <div
                                 key={prop.id}
                                 onClick={() => setSelectedProperty(prop)}
@@ -518,6 +329,7 @@ export default function AiSearchPage() {
                                     alt={prop.address?.unparsedAddress || "Property"}
                                     fill
                                     className="object-cover"
+                                    sizes="(max-width: 768px) 130px, 155px"
                                   />
                                 </div>
                               </div>
@@ -525,14 +337,14 @@ export default function AiSearchPage() {
                           </div>
                         )}
 
-                        {/* View on Map dashed link */}
-                        {msg.showViewOnMap && (
-                          <button
-                            onClick={() => alert("To view these properties, click on a house thumbnail to see detailed pricing and MLS features.")}
-                            className="text-[#E57C35] font-bold text-base md:text-lg border-b border-dashed border-[#E57C35] pb-0.5 hover:opacity-80 transition-opacity mt-1 cursor-pointer"
+                        {/* View all matches link */}
+                        {msg.properties && msg.properties.length > 0 && (
+                          <Link
+                            href="/ai-result"
+                            className="text-[#E57C35] font-bold text-base md:text-lg border-b border-dashed border-[#E57C35] pb-0.5 hover:opacity-80 transition-opacity mt-1 cursor-pointer inline-block"
                           >
-                            View on map
-                          </button>
+                            View all
+                          </Link>
                         )}
                       </motion.div>
                     )}

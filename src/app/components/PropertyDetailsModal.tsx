@@ -85,7 +85,13 @@ export default function PropertyDetailsModal({ isOpen, onClose, property }: Prop
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3 h-[350px] md:h-[600px]">
             {/* Main Image */}
             <div className="relative w-full h-full md:col-span-3 rounded-xl overflow-hidden cursor-pointer group">
-              <Image src={mainImage} alt="Main" fill className="object-cover group-hover:scale-[1.02] transition-transform duration-700" />
+              <Image
+                src={mainImage}
+                alt="Main"
+                fill
+                className="object-cover group-hover:scale-[1.02] transition-transform duration-700"
+                sizes="(max-width: 768px) 100vw, 75vw"
+              />
               <div className="absolute top-6 left-6 bg-white px-4 py-2 rounded-md text-sm font-bold flex items-center shadow-lg">
                 <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div> For sale
               </div>
@@ -93,10 +99,22 @@ export default function PropertyDetailsModal({ isOpen, onClose, property }: Prop
             {/* Side Images */}
             <div className="hidden md:grid grid-rows-2 gap-3 h-full">
               <div className="relative w-full h-full rounded-xl overflow-hidden cursor-pointer group">
-                <Image src={sideImage1} alt="Side 1" fill className="object-cover group-hover:scale-[1.02] transition-transform duration-700" />
+                <Image
+                  src={sideImage1}
+                  alt="Side 1"
+                  fill
+                  className="object-cover group-hover:scale-[1.02] transition-transform duration-700"
+                  sizes="(max-width: 768px) 50vw, 25vw"
+                />
               </div>
               <div className="relative w-full h-full rounded-xl overflow-hidden cursor-pointer group">
-                <Image src={sideImage2} alt="Side 2" fill className="object-cover group-hover:scale-[1.02] transition-transform duration-700" />
+                <Image
+                  src={sideImage2}
+                  alt="Side 2"
+                  fill
+                  className="object-cover group-hover:scale-[1.02] transition-transform duration-700"
+                  sizes="(max-width: 768px) 50vw, 25vw"
+                />
                 <button className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm px-4 py-2.5 font-bold text-sm rounded-lg shadow-xl hover:bg-white flex items-center border border-gray-100 transition-colors">
                   <MoreHorizontal className="w-4 h-4 mr-2" /> See all {mediaImages.length > 0 ? mediaImages.length : 45} photos
                 </button>

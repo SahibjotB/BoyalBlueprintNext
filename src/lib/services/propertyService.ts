@@ -7,7 +7,7 @@ export async function fetchPropertiesWithRoomsMedia(odataQuery: string, resultCo
 
     const propertyIDs = rawProperties.map(p => p.id);
 
-    const roomPropertyMap = await fetchMLSRoomProperties(webURL, propertyIDs)  
+    const roomPropertyMap = await fetchMLSRoomProperties(webURL, propertyIDs)
 
     /* Added fix for media responses to do singular mapping call s */
     const mediaResponses = await Promise.all(
@@ -42,28 +42,28 @@ export async function fetchPropertiesWithRoomsMedia(odataQuery: string, resultCo
 
     // filter the mediaList to only have largest images
     const filteredSortedMedia = mediaList
-    .filter(
-        (mediaItem) =>
-            mediaItem.ImageSizeDescription == "Largest"
-    ) 
-    // updated sort function for priority ranking in images... 
-    .sort((a, b) => {
+        .filter(
+            (mediaItem) =>
+                mediaItem.ImageSizeDescription == "Largest"
+        )
+        // updated sort function for priority ranking in images... 
+        .sort((a, b) => {
 
-        // 1. Preferred photo first
-        if (a.PreferredPhotoYN && !b.PreferredPhotoYN) return -1;
-        if (!a.PreferredPhotoYN && b.PreferredPhotoYN) return 1;
+            // 1. Preferred photo first
+            if (a.PreferredPhotoYN && !b.PreferredPhotoYN) return -1;
+            if (!a.PreferredPhotoYN && b.PreferredPhotoYN) return 1;
 
-        // 2. Valid order next
-        if (a.Order !== b.Order) {
-            return a.Order - b.Order;
-        }
+            // 2. Valid order next
+            if (a.Order !== b.Order) {
+                return a.Order - b.Order;
+            }
 
-        // 3. Oldest upload first (fallback)
-        return (
-            new Date(a.MediaModificationTimestamp).getTime() -
-            new Date(b.MediaModificationTimestamp).getTime()
-        );
-    })
+            // 3. Oldest upload first (fallback)
+            return (
+                new Date(a.MediaModificationTimestamp).getTime() -
+                new Date(b.MediaModificationTimestamp).getTime()
+            );
+        })
 
     const mediaMap = new Map<string, string[]>();
 
@@ -78,13 +78,13 @@ export async function fetchPropertiesWithRoomsMedia(odataQuery: string, resultCo
 
         // get existing array in map and push values into it
         // only do this if the image is the largest for that property
-        mediaMap.get(mediaItem.ResourceRecordKey)?.push(mediaItem.MediaURL);            
+        mediaMap.get(mediaItem.ResourceRecordKey)?.push(mediaItem.MediaURL);
     }
 
     // loop through and update each of the property with list of rooms and list of media images
     for (const property of rawProperties) {
         property.roomList = roomPropertyMap.get(property.id)
-       
+
         // map media here in a similar manner (gets array of media URLs for that id from the map) 
         property.mediaImages = mediaMap.get(property.id)
 
@@ -94,13 +94,13 @@ export async function fetchPropertiesWithRoomsMedia(odataQuery: string, resultCo
     return rawProperties;
 }
 
-async function fetchMLSProperties(webAPIAddress: string | undefined, odataFilter: string, top?: number): Promise<Property[]>{
+async function fetchMLSProperties(webAPIAddress: string | undefined, odataFilter: string, top?: number): Promise<Property[]> {
     const url = `${webAPIAddress}/odata/Property?$filter=${odataFilter}`;
     console.log("Fetching properties with URL:", url, "and filter:", odataFilter);
 
     const response = await fetch(url, {
         method: "GET",
-        headers: { 
+        headers: {
             Accept: "application/json",
             Authorization: `Bearer ${process.env.MLS_TOKEN}`,
         },
@@ -118,10 +118,10 @@ async function fetchMLSProperties(webAPIAddress: string | undefined, odataFilter
     const propertiesList = jsonData.value;
 
     return propertiesList.map((p: any): Property => ({
-        id: p.ListingKey, 
-        address : {
+        id: p.ListingKey,
+        address: {
             unparsedAddress: p.UnparsedAddress,
-            stateOrProvince: p.StateOrProvince,  
+            stateOrProvince: p.StateOrProvince,
             streetName: p.StreetName,
             streetNumber: p.StreetNumber,
             legalApartmentNumber: p.LegalApartmentNumber,
@@ -149,9 +149,9 @@ async function fetchMLSProperties(webAPIAddress: string | undefined, odataFilter
 
         closeDate: new Date(p.CloseDate),
         closePrice: p.ClosePrice,
-        
+
         coolingDetails: p.Cooling,
-    
+
         daysOnMarket: p.DaysOnMarket,
         exteriorFeatures: p.ExteriorFeatures,
         fireplaceYN: p.FireplaceYN,
@@ -166,14 +166,14 @@ async function fetchMLSProperties(webAPIAddress: string | undefined, odataFilter
         leaseAmount: p.LeaseAmount,
         listPrice: p.ListPrice,
         listingDate: p.ListingContractDate ? new Date(p.ListingContractDate) : null,
-        livingSqftRange: p.LivingAreaRange, 
+        livingSqftRange: p.LivingAreaRange,
         lotDepth: p.LotDepth,
         lotWidth: p.LotWidth,
         lotSizeArea: p.LotSizeArea,
         mainLevelBathrooms: p.MainLevelBathrooms,
         mainLevelBedrooms: p.MainLevelBedrooms,
         mlsStatus: p.MlsStatus,
-    
+
         originalListPrice: p.OriginalListPrice,
         parkingMonthlyCost: p.ParkingMonthlyCost,
         parkingSpaces: p.ParkingSpaces,
@@ -184,13 +184,13 @@ async function fetchMLSProperties(webAPIAddress: string | undefined, odataFilter
         propertyType: p.PropertyType,
         propertySubType: p.PropertySubType,
         publicRemarks: p.PublicRemarks,
-        purchaseContractDate: p.PurchaseContractDate ? new Date(p.PurchaseContractDate) : null, 
+        purchaseContractDate: p.PurchaseContractDate ? new Date(p.PurchaseContractDate) : null,
         recreationRoomYN: p.RecreationRoomYN,
         roof: p.Roof,
-    
+
         // property room end point ****** 
         roomList: [],
-    
+
         // Continued Property fields
         roomsTotal: p.RoomsTotal,
         securityFeatures: p.SecurityFeatures,
@@ -198,17 +198,17 @@ async function fetchMLSProperties(webAPIAddress: string | undefined, odataFilter
         sewer: p.Sewer,
         shoreline: p.Shoreline,
         showingAppointments: p.ShowingAppointments,
-        
+
         structureType: p.StructureType,
         taxAnnualAmount: p.TaxAnnualAmount,
-    
+
         utilities: p.Utilities,
         view: p.View,
-    
+
         virtualTourURLBranded: p.VirtualTourURLUnbranded,
-        
+
         // map any relevant washrooms 
-        washroomDetails: [1, 2, 3, 4, 5].map( i => {
+        washroomDetails: [1, 2, 3, 4, 5].map(i => {
             const washroomType = p[`WashroomsType${i}`];
             const level = p[`WashroomsType${i}Level`];
             const pieces = p[`WashroomsType${i}Pcs`];
@@ -223,10 +223,10 @@ async function fetchMLSProperties(webAPIAddress: string | undefined, odataFilter
             }
             return undefined;
         }).filter((washroom): washroom is Washroom => washroom !== undefined),
-    
+
         water: p.Water,
         waterfrontExists: p.WaterFrontYN,
-    
+
         // media endpoint
         mediaImages: []
     }));
@@ -239,7 +239,7 @@ async function fetchMLSRoomProperties(webAPIAddress: string | undefined, propert
 
     const response = await fetch(url, {
         method: "GET",
-        headers: { 
+        headers: {
             Accept: "application/json",
             Authorization: `Bearer ${process.env.MLS_TOKEN}`,
         },
