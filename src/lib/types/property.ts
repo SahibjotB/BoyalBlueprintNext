@@ -50,6 +50,7 @@ export type Property = {
     basementExist: boolean | null;
     basementDetails: string[] | null;
     bathroomsTotal: number | null;
+    bedroomsTotal: number | null;
     bedroomsAboveGrade: number | null;
     bedroomsBelowGrade: number | null;
     rawSqftTotal: number | null;
@@ -98,7 +99,7 @@ export type Property = {
     roof: string[] | null;
 
     // property room end point
-    RoomList: Room[] | undefined;
+    roomList: Room[] | undefined;
 
     // Continued Property fields
     roomsTotal: number | null;
