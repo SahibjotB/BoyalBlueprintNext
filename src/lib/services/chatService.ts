@@ -1,12 +1,13 @@
 import { ChatResult, Intent, IntentResult, ChatContext } from "../types/chat";
-import { Property, stripMediaData } from "../types/property";
+import { mapPropertyAddressData, Property, stripMediaData } from "../types/property";
 import { buildODataQuery } from "../utils/buildFilter";
 import { extractPropertyValues } from "./ai/extractService";
 import { identifyIntent } from "./ai/intentService";
 import { refinePropertySearch } from "./ai/propertySearchRefinementService";
 import { answerRealEstateQuestions } from "./ai/realEstateAdviceService";
+import { identifySpecializedProperty } from "./ai/specializedPropertyIdentifierService";
 import { answerSpecializedPropertyQuestions } from "./ai/specializedPropertyService";
-import { fetchPropertiesWithRoomsMedia } from "./propertyService";
+import { fetchMLSProperties } from "./propertyService";
 /* 
     The full orchetrator of handling all chat calls from chat API route when called in from front-end 
         - Handles intent & calls different services and functions based on intent classification
@@ -49,7 +50,7 @@ export async function handleChat(userQuery: string, context?: ChatContext): Prom
 
             // call Property API with query
 
-            const propertiesList = await fetchPropertiesWithRoomsMedia(odataQueryString, 5);
+            const propertiesList = await fetchMLSProperties(odataQueryString, 5);
 
             // Return array of Property objects (show a few of them and say you can view more listings and save them (login prompt?))
             return { type: "property_search", properties: propertiesList };
@@ -80,16 +81,31 @@ export async function handleChat(userQuery: string, context?: ChatContext): Prom
             }
 
         case "specific_property":
+
             // Sanity check 
-            if (context?.selectedProperty != null) {
+            if (context?.selectedProperties != null) {
                 // take singular property context, pass it all in to property LLM, return answers as a string
-                const specificProperty = context?.selectedProperty;
+                const specificProperties = context?.selectedProperties;
                 
                 // call function, pass these things --> that function has the system prompt for it and calls the LLM and returns the response for that specific property question
-                const response = await answerSpecializedPropertyQuestions(userQuery, specificProperty);
+                const response = await answerSpecializedPropertyQuestions(userQuery, specificProperties);
 
                 return { type: "text", content: response.response };
-            } else {
+
+            } else if (context?.propertyListContext != null) {
+                // search for property out of the given list of properties using the property address street name 
+                const propertyAddressContextList = mapPropertyAddressData(context.propertyListContext);
+
+                const identifiedPropertyResponse = await identifySpecializedProperty(userQuery, propertyAddressContextList);
+
+                // call function, pass these things --> that function has the system prompt for it and calls the LLM and returns the response for that specific property question
+                const specificProperties = context.propertyListContext.filter(property => identifiedPropertyResponse.ids.includes(property.id));
+                const response = await answerSpecializedPropertyQuestions(userQuery, specificProperties);
+
+                 return { type: "text", content: response.response };
+
+            } 
+            else {
                 return { type: "text", content: "Error: no specific property selected" };
             }
 
