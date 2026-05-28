@@ -88,7 +88,7 @@ export async function handleChat(userQuery: string, context?: ChatContext): Prom
                 const specificProperties = context?.selectedProperties;
                 
                 // call function, pass these things --> that function has the system prompt for it and calls the LLM and returns the response for that specific property question
-                const response = await answerSpecializedPropertyQuestions(userQuery, specificProperties);
+                const response = await answerSpecializedPropertyQuestions(userQuery, stripMediaData(specificProperties));
 
                 return { type: "text", content: response.response };
 
@@ -100,7 +100,7 @@ export async function handleChat(userQuery: string, context?: ChatContext): Prom
 
                 // call function, pass these things --> that function has the system prompt for it and calls the LLM and returns the response for that specific property question
                 const specificProperties = context.propertyListContext.filter(property => identifiedPropertyResponse.ids.includes(property.id));
-                const response = await answerSpecializedPropertyQuestions(userQuery, specificProperties);
+                const response = await answerSpecializedPropertyQuestions(userQuery, stripMediaData(specificProperties));
 
                  return { type: "text", content: response.response };
 
