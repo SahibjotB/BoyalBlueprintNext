@@ -33,7 +33,7 @@ export function saveChatContext(chatContext: ChatContext) {
 }
 
 export function getSavedChatContext(): ChatContext | null {
-    const chatContextJSON = sessionStorage.getItem(CHAT_KEY);
+    const chatContextJSON = sessionStorage.getItem(CHAT_CONTEXT_KEY);
     if (chatContextJSON) {
         return JSON.parse(chatContextJSON) as ChatContext;
     }
