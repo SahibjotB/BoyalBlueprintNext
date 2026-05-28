@@ -24,6 +24,10 @@ export type PropertyRefinementResult = {
     ids: string[];
 }
 
+export type PropertyIdentifiedResult = {
+    ids: string[];
+}
+
 /* Types for chat service to return to front end with consistent format for handling in the front end and rendering */
 export type ChatResult = 
 |   {
@@ -79,7 +83,7 @@ export type ChatHistoryItem = {
 export type ChatContext = {
     intent?: IntentResult;
 
-    selectedProperty?: Property;
+    selectedProperties?: Property[];
 
     previousSearch?: ChatHistoryItem;
 
