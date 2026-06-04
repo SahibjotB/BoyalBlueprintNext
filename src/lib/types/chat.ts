@@ -31,16 +31,14 @@ export type PropertyIdentifiedResult = {
 /* Types for chat service to return to front end with consistent format for handling in the front end and rendering */
 export type ChatResult = 
 |   {
-        type: "refinement";
-        propertyIds: string[];
-    }
-|   {
         type: "clarification";
         content: string[];
+        contextUpdate?: Partial<ChatContext>;
     }
 |   {
         type: "text";
         content: string;
+        contextUpdate?: Partial<ChatContext>;
     }
 |   {
         type: "property_search";
@@ -60,38 +58,61 @@ export type FilterItem = {
     value: string | number | boolean;
     operator: PropertyOperator;
 }
+
+export type ActiveFilter = {
+    key: string;
+    value: string | number | boolean;
+}
+
 export type ExtractLLMResult = {
     filters: FilterItem[];
+    activeFilters: ActiveFilter[];
     needsClarification: boolean;
     missingFields: string[];
 }
 
-export type FilterMap = Record<string, {value: string | number | boolean; operator: PropertyOperator;}>;
+export type FilterMap = Record<string, FilterItem[]>;
 
 export type ExtractResult = {
-    filters: FilterMap;
+    filters: FilterItem[];
     needsClarification: boolean;
     missingFields: string[];
 };
 
 export type ChatHistoryItem = {
     sender: string;
-    response: string;
+    message: string;
     intent: Intent;
 };
+
+export type ActiveSearchCriteria = {
+    city?: string;
+    minPrice?: number;
+    maxPrice?: number;
+};
+
+export type SearchState = {
+    // criteria used to generate the original MLS search
+    activeSearchCriteria?: ActiveSearchCriteria;
+
+    // raw MLS results before any AI refinement
+    originalPropertyResults?: Property[];
+
+    // current working set after refinements
+    refinedPropertyResults?: Property[];
+
+    // Human-readable refinement history
+    activeFilters: string[];
+
+}
 
 export type ChatContext = {
     intent?: IntentResult;
 
     selectedProperties?: Property[];
 
-    previousSearch?: ChatHistoryItem;
-
     missingFields?: string[];
-    additionalContent?: string;
 
-    propertyListContext?: Property[];
-
-    firstTimeRunFlag?: boolean;
+    searchState?: SearchState;
 
 };
