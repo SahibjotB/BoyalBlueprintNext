@@ -11,13 +11,13 @@ export function saveProperties(properties: Property[]) {
 }
 
 export function getSavedProperties(): Property[] {
-    const propertiesJSON = sessionStorage.getItem(PROPERTY_RESULTS_KEY);  
+    const propertiesJSON = sessionStorage.getItem(PROPERTY_RESULTS_KEY);
     if (propertiesJSON) {
         return JSON.parse(propertiesJSON) as Property[];
     }
     return [];
 }
- 
+
 export function clearSavedProperties() {
     sessionStorage.removeItem(PROPERTY_RESULTS_KEY);
 }
@@ -42,14 +42,14 @@ export function getSavedChatContext(): ChatContext | null {
 
 /** Safe merge update */
 export function updateChatContext(patch: Partial<ChatContext>) {
-  const existing = getSavedChatContext() ?? {};
+    const existing = getSavedChatContext() ?? {};
 
-  const updated: ChatContext = {
-    ...existing,
-    ...patch,
-  };
+    const updated: ChatContext = {
+        ...existing,
+        ...patch,
+    };
 
-  saveChatContext(updated);
+    saveChatContext(updated);
 }
 
 /* Chat History Functions */

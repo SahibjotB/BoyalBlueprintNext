@@ -56,7 +56,7 @@ export default function PropertyCard({
     const beds = property.bedroomsTotal ?? property.bedroomsAboveGrade ?? 0;
     const baths = property.bathroomsTotal ?? 0;
     const subType = property.propertySubType ?? 'House';
-    return `${beds} bds | ${baths} ba | ${subType} for sale`;
+    return `${beds} bds | ${baths} ba | ${subType}`;
   };
 
   const getAddressString = () => {
