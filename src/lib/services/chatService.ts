@@ -1,4 +1,4 @@
-import { ChatResult, Intent, IntentResult, ChatContext } from "../types/chat";
+import { ChatResult, Intent, IntentResult, ChatContext, ActiveSearchCriteria, FilterItem, PropertyOperator } from "../types/chat";
 import { mapPropertyAddressData, Property, stripMediaData } from "../types/property";
 import { buildODataQuery } from "../utils/buildFilter";
 import { extractPropertyValues } from "./ai/extractService";
@@ -24,7 +24,7 @@ import { fetchMLSProperties } from "./propertyService";
 // HISTORY should I do it with UserQuery getting updated or stored history and then feed that in as context with the new user query each time? I think the second one is better for keeping track of the conversation and having that available for the LLM to use as context when needed instead of just the new user query each time which would lose a lot of the conversation history and context that could be relevant for the LLM to generate better responses.
 
 export async function testIntent(userQuery: string, context?: ChatContext): Promise<ChatResult> {
-    const intent = context?.intent ?? await identifyIntent(userQuery, context?.firstTimeRunFlag);
+    const intent = context?.intent ?? await identifyIntent(userQuery);
     console.log(`this is the intent ${intent.intent}`);
     return { type: "text", content: `this is a response for ${intent.intent} intent with confidence: ${intent.confidence}` }; 
 }
@@ -39,18 +39,53 @@ export async function handleChat(userQuery: string, context?: ChatContext): Prom
     switch(intent.intent) {
         // Return with ChatResult type makes it easy to handle what comes back in the front end and ensures we have a consistent format for all responses
         case "property_search":
-            // passing the type here lets us know what to expect and what is required to be sent back such as a string message here but could be more complex types as well with more data for the front end to work with
-            
+            let propertiesList: Property[] = [];
+
             // calls to extraction service 
-            const propertyFilters = await extractPropertyValues(userQuery);
-            console.log("Extracted property filters:", propertyFilters);
-        
-            const odataQueryString = await buildODataQuery(propertyFilters.filters);
+            const propertyFilterExtractionResult = await extractPropertyValues(userQuery);
+
+            // if missing CORE values are determined 
+            if (propertyFilterExtractionResult.needsClarification) {
+                // return with clarification type and content to show to the user and also update the context with what fields are missing so that when the user responds with the clarification we have that context available to know what they are clarifying about 
+                
+                //*** DO I WANT TO DELIVERY THE ENTIRE CONTEXT BACK IN CONTEXT UPDATE? PASSING IN THE PREVIOUS CONTEXT */
+                return { type: "clarification", missingFields: propertyFilterExtractionResult.missingFields, contextUpdate: { intent: intent } };
+            }   
+            
+            /* BASE MLS Filtering logic: get values here and then build OData query string to send to the property API to get results back based on those filters. */
+            const MLSBaseFilter = propertyFilterExtractionResult.filters.filter(filter => filter.key === "city" || filter.key === "price");
+            const odataQueryString = await buildODataQuery(MLSBaseFilter);
+
             console.log("Generated OData query string:", odataQueryString);
+
+            // Store activeFilters. Not actively using them
+            const activeFilters = propertyFilterExtractionResult.activeFilters;
+
+            /* MLS Property search. Update originalPropertyList */
+            // Either search context has changed or there is no existing property list 
+            if(hasSearchCriteriaChanged(context?.searchState?.activeSearchCriteria, MLSBaseFilter) || context?.searchState?.originalPropertyResults == null) {
+                propertiesList = await fetchMLSProperties(odataQueryString, 5);
+
+                // if activeFilters have values we have to refine this further with these filters so just send propertyList and search query to the refinement function
+                const filteredPropertyIdsResponse = await refinePropertySearch(userQuery, stripMediaData(propertiesList)); 
+                const refinedPropertiesList = propertiesList.filter(property => filteredPropertyIdsResponse.ids.includes(property.id));
+
+            } else {
+                /* Else refinement search. Update refined propertyList instead of origional */
+
+
+            }
+
+            
+            
+
+            /* Update all context and return */
+
+            
 
             // call Property API with query
 
-            const propertiesList = await fetchMLSProperties(odataQueryString, 5);
+            
 
             // Return array of Property objects (show a few of them and say you can view more listings and save them (login prompt?))
             return { type: "property_search", properties: propertiesList };
@@ -66,16 +101,16 @@ export async function handleChat(userQuery: string, context?: ChatContext): Prom
 
         case "refinement":
             // take past property array context, pass it all in to filter, return property array back based on that refinement from the user query 
-            if (context?.propertyListContext != null) {
-                const allProperties = context?.propertyListContext;
-
+            if (context?.searchState?.originalPropertyResults != null) {
+                const allProperties = context?.searchState?.originalPropertyResults;
+                
                 // take all the current properties, send it into LLM with the user query and instructions to refine the list based on the user query and return back a refined list of properties based on that
 
                 // function here with parameters, user query, and property list context --> that function has the system prompt for it and calls the LLM and returns the refined list of properties based on that user query refinement request
                 // const filteredProperties --> have a different return type. PropertyArray probably
                 const filteredPropertyIdsResponse = await refinePropertySearch(userQuery, stripMediaData(allProperties)); 
                 
-                return { type: "refinement", propertyIds: filteredPropertyIdsResponse.ids };
+                return { type: "text", propertyIds: filteredPropertyIdsResponse.ids };
             } else {
                 return { type: "text", content: "Error: The propertyList is blank" };
             }
@@ -90,26 +125,27 @@ export async function handleChat(userQuery: string, context?: ChatContext): Prom
                 // call function, pass these things --> that function has the system prompt for it and calls the LLM and returns the response for that specific property question
                 const response = await answerSpecializedPropertyQuestions(userQuery, stripMediaData(specificProperties));
 
-                return { type: "text", content: response.response };
+                // type is a simple response but context update includes the intent and the selected properties that match the user query for the specific property question so that it can be used for follow up questions about that same property without having to identify the property again
+                return { type: "text", content: response.response, contextUpdate: { intent: intent, selectedProperties: specificProperties } };
 
-            } else if (context?.propertyListContext != null) {
+            } else if (context?.searchState?.originalPropertyResults != null) {
                 // search for property out of the given list of properties using the property address street name 
-                const propertyAddressContextList = mapPropertyAddressData(context.propertyListContext);
+                const propertyAddressContextList = mapPropertyAddressData(context.searchState?.originalPropertyResults);
 
                 const identifiedPropertyResponse = await identifySpecializedProperty(userQuery, propertyAddressContextList);
 
                 // call function, pass these things --> that function has the system prompt for it and calls the LLM and returns the response for that specific property question
-                const specificProperties = context.propertyListContext.filter(property => identifiedPropertyResponse.ids.includes(property.id));
+                const specificProperties = context.searchState?.originalPropertyResults.filter(property => identifiedPropertyResponse.ids.includes(property.id));
                 const response = await answerSpecializedPropertyQuestions(userQuery, stripMediaData(specificProperties));
 
-                 return { type: "text", content: response.response };
+                // type is a simple response but context update includes the intent and the selected properties that match the user query for the specific property question so that it can be used for follow up questions about that same property without having to identify the property again
+                return { type: "text", content: response.response, contextUpdate: { intent: intent, selectedProperties: specificProperties } };
 
             } 
             else {
                 return { type: "text", content: "Error: no specific property selected" };
             }
 
-        
         case "other":
             return { type: "text", content: `this is a response for other intent with confidence: ${intent.confidence}` };
         
@@ -117,3 +153,32 @@ export async function handleChat(userQuery: string, context?: ChatContext): Prom
             return { type: "text", content: `could not classify intent with confidence: ${intent.confidence}` };
     }
 }
+
+/* Helper functions for search and filtering*/
+function hasSearchCriteriaChanged(activeFilter: ActiveSearchCriteria | undefined, newBaseFilters: FilterItem[]): boolean {
+    if (!activeFilter) return true;
+
+    const newCriteria = deriveFilters(newBaseFilters);
+
+    return (
+        newCriteria.city !== activeFilter.city ||
+        newCriteria.minPrice !== activeFilter.minPrice ||
+        newCriteria.maxPrice !== activeFilter.maxPrice
+    );
+}
+
+function deriveFilters(filters: FilterItem[]) {
+    const city = getFilter(filters, "City")?.value;
+    const minPrice = getFilter(filters, "ListPrice", "ge")?.value;
+    const maxPrice = getFilter(filters, "ListPrice", "le")?.value;
+
+    return { city, minPrice, maxPrice };
+}
+
+function getFilter(filters: FilterItem[], key: string, operator?: PropertyOperator): FilterItem | undefined {
+    return filters.find(filter => filter.key === key && (operator ? filter.operator === operator : true));
+}
+
+
+
+

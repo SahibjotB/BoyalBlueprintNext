@@ -32,7 +32,7 @@ export type PropertyIdentifiedResult = {
 export type ChatResult = 
 |   {
         type: "clarification";
-        content: string[];
+        missingFields: string[];
         contextUpdate?: Partial<ChatContext>;
     }
 |   {
@@ -75,6 +75,7 @@ export type FilterMap = Record<string, FilterItem[]>;
 
 export type ExtractResult = {
     filters: FilterItem[];
+    activeFilters: ActiveFilter[];
     needsClarification: boolean;
     missingFields: string[];
 };
@@ -102,7 +103,7 @@ export type SearchState = {
     refinedPropertyResults?: Property[];
 
     // Human-readable refinement history
-    activeFilters: string[];
+    activeFilters?: string[];
 
 }
 
