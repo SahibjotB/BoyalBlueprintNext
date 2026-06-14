@@ -44,7 +44,7 @@ export async function extractPropertyValues(userQuery:string): Promise<ExtractRe
           - "driveway, parking spaces"
           - "backyard, outdoor space"
           - "proximity to amenities like parks, schools, shopping"
-        - Add any of these active filters that are mentioned in the user query to the activeFilters array in the response as free-form text. Aim to categorize the property of them as the key and the user preference as the value but if its not clear just add the whole phrase as the value and use a generic key like "userPreference" or "feature"
+        - Add any of these active filters that are mentioned in the user query to the activeFilters array in the response as free-form text. Aim to categorize the property of them as the key and the user preference as the value but if its not clear just add the whole phrase as the value and use a generic key like "userPreference" or "feature". If there is ranges like "square footage greater than 2000 sqft" you can add that as an active filter with key "squareFootage" and value "greater than 2000 sqft" or something similar. The goal is to capture user preferences that may not be directly tied to MLS fields but are still important for understanding what the user is looking for in a property.
 
         Rules for both types of data:
         - Do not guess values
@@ -55,8 +55,8 @@ export async function extractPropertyValues(userQuery:string): Promise<ExtractRe
         - Multiple filters per attribute are allowed (ranges)
 
             
-        If City is missing, mark needsClarification = true and add "city" to missingFields array otherwise needsClarification should be false and missingFields should be empty array if all needed fields are there.
-        If ListPrice is missing, mark needsClarification = true and add "price" to missingFields array otherwise needsClarification should be false and missingFields should be empty array if all needed fields are there.
+        If City is missing, mark needsClarification = true and add "City" to missingFields array otherwise needsClarification should be false and missingFields should be empty array if all needed fields are there.
+        If ListPrice is missing, mark needsClarification = true and add "ListPrice" to missingFields array otherwise needsClarification should be false and missingFields should be empty array if all needed fields are there.
     `;
 
     // Define the expected schema for the LLM response to ensure we get structured data back that we can work with
@@ -111,7 +111,7 @@ export async function extractPropertyValues(userQuery:string): Promise<ExtractRe
                     items: { type: "string" }
                 }
             },
-            required: ["filters", "needsClarification", "missingFields"],
+            required: ["filters", "activeFilters", "needsClarification", "missingFields"],
             additionalProperties: false
         }
     }
@@ -122,6 +122,7 @@ export async function extractPropertyValues(userQuery:string): Promise<ExtractRe
     
     const extractResponse = {
         filters: normalizedFilters,
+        activeFilters: LLMResponse.activeFilters,
         needsClarification: LLMResponse.needsClarification,
         missingFields: LLMResponse.missingFields
     }

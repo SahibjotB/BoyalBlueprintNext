@@ -43,6 +43,7 @@ export type ChatResult =
 |   {
         type: "property_search";
         properties: Property[];
+        contextUpdate?: Partial<ChatContext>;
     };
 
 
@@ -103,7 +104,7 @@ export type SearchState = {
     refinedPropertyResults?: Property[];
 
     // Human-readable refinement history
-    activeFilters?: string[];
+    activeFilters?: ActiveFilter[];
 
 }
 

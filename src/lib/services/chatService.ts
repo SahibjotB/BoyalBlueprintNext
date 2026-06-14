@@ -44,79 +44,86 @@ export async function handleChat(userQuery: string, context?: ChatContext): Prom
             // calls to extraction service 
             const propertyFilterExtractionResult = await extractPropertyValues(userQuery);
 
-            // if missing CORE values are determined 
-            if (propertyFilterExtractionResult.needsClarification) {
+            // Build search criteria and take into account any previous mentions of that criteria, merge those together
+            const extractedRequiredSearchCriteria = buildSearchCriteria(propertyFilterExtractionResult.filters);
+
+            const mergedRequiredSearchCriteria: ActiveSearchCriteria = {
+                ...context?.searchState?.activeSearchCriteria,
+                ...extractedRequiredSearchCriteria
+            };
+
+            // check extracted missing fields against the merged extracted fields and previous context fields. removing any that are present already
+            let missingFields = [...propertyFilterExtractionResult.missingFields];
+            
+            missingFields = missingFields.filter(field => {
+                switch (field) {
+                    case "City":
+                        return !mergedRequiredSearchCriteria.city;
+                    case "ListPrice":
+                        return (mergedRequiredSearchCriteria.minPrice == null && mergedRequiredSearchCriteria.maxPrice == null);
+                    default:
+                        return true; // keep fields that are not recognized for now 
+                }
+            });
+
+            // Check against the missing fields that are already satisifed by the past context... Make sure there isn't still fields missing that are required (if length > 0)
+            if (missingFields.length > 0) {
                 // return with clarification type and content to show to the user and also update the context with what fields are missing so that when the user responds with the clarification we have that context available to know what they are clarifying about 
-                
-                //*** DO I WANT TO DELIVERY THE ENTIRE CONTEXT BACK IN CONTEXT UPDATE? PASSING IN THE PREVIOUS CONTEXT */
-                return { type: "clarification", missingFields: propertyFilterExtractionResult.missingFields, contextUpdate: { intent: intent } };
+                return { type: "clarification", missingFields: propertyFilterExtractionResult.missingFields, contextUpdate: { intent: intent, searchState: { ...context?.searchState, activeSearchCriteria: mergedRequiredSearchCriteria, activeFilters: propertyFilterExtractionResult.activeFilters } } };
             }   
             
             /* BASE MLS Filtering logic: get values here and then build OData query string to send to the property API to get results back based on those filters. */
-            const MLSBaseFilter = propertyFilterExtractionResult.filters.filter(filter => filter.key === "city" || filter.key === "price");
+            const MLSBaseFilter = buildMLSBaseFilters(mergedRequiredSearchCriteria);
             const odataQueryString = await buildODataQuery(MLSBaseFilter);
 
             console.log("Generated OData query string:", odataQueryString);
 
-            // Store activeFilters. Not actively using them
-            const activeFilters = propertyFilterExtractionResult.activeFilters;
 
             /* MLS Property search. Update originalPropertyList */
-            // Either search context has changed or there is no existing property list 
-            if(hasSearchCriteriaChanged(context?.searchState?.activeSearchCriteria, MLSBaseFilter) || context?.searchState?.originalPropertyResults == null) {
+            let refinedPropertyResults = context?.searchState?.refinedPropertyResults;
+
+            // Either search context has changed or there is no existing property list so query MLS for new list or else just use the one from context given no change
+            if(hasSearchCriteriaChanged(context?.searchState?.activeSearchCriteria, MLSBaseFilter) || context?.searchState?.originalPropertyResults == null || context?.searchState?.originalPropertyResults.length == 0) {
                 propertiesList = await fetchMLSProperties(odataQueryString, 5);
-
-                // if activeFilters have values we have to refine this further with these filters so just send propertyList and search query to the refinement function
-                const filteredPropertyIdsResponse = await refinePropertySearch(userQuery, stripMediaData(propertiesList)); 
-                const refinedPropertiesList = propertiesList.filter(property => filteredPropertyIdsResponse.ids.includes(property.id));
-
+                refinedPropertyResults = undefined;
             } else {
-                /* Else refinement search. Update refined propertyList instead of origional */
-
-
+                propertiesList = context.searchState.originalPropertyResults;
             }
 
-            
-            
+            // Get active filters (non mls.. used for LLM)
+            const activeFilters = propertyFilterExtractionResult.activeFilters;
 
-            /* Update all context and return */
+            // if activeFilters have values we have to refine this further with these filters so just send propertyList and search query to the refinement function
+            if (activeFilters.length > 0) {
+                let refinedPropertiesList: Property[];
+                // if there is something to refine.. if there is an existing list, refine that list first.. if there isn't a list or its the first search with extra criteria refine the original
+                if (refinedPropertyResults != null && refinedPropertyResults.length > 0) {
+                    const filteredPropertyIdsResponse = await refinePropertySearch(userQuery, stripMediaData(refinedPropertyResults)); 
+                    refinedPropertiesList = refinedPropertyResults.filter(property => filteredPropertyIdsResponse.ids.includes(property.id));
 
-            
+                    // if refined gives 0... refine the original property list
+                    if (refinedPropertiesList.length == 0 && context?.searchState?.originalPropertyResults != null) {
+                        // run the refinement again with the original results to narrow that down
+                        const filteredPropertyIdsResponse = await refinePropertySearch(userQuery, stripMediaData(propertiesList)); 
+                        refinedPropertiesList = propertiesList.filter(property => filteredPropertyIdsResponse.ids.includes(property.id));
+                    }
+                } else {
+                    // filter off regular property list without ever using the refinement list (isn't one yet)
+                    const filteredPropertyIdsResponse = await refinePropertySearch(userQuery, stripMediaData(propertiesList)); 
+                    refinedPropertiesList = propertiesList.filter(property => filteredPropertyIdsResponse.ids.includes(property.id));
+                }
+                // if there is refinement. return main list as the refined one and store the original and refined 
+                return { type: "property_search", properties: refinedPropertiesList, contextUpdate : {intent: intent, searchState: {originalPropertyResults: propertiesList, refinedPropertyResults: refinedPropertiesList, activeSearchCriteria: mergedRequiredSearchCriteria, activeFilters: propertyFilterExtractionResult.activeFilters}}};
+            }
 
-            // call Property API with query
-
-            
-
-            // Return array of Property objects (show a few of them and say you can view more listings and save them (login prompt?))
-            return { type: "property_search", properties: propertiesList };
+            // Return array of Property objects (nothing refined)
+            return { type: "property_search", properties: propertiesList, contextUpdate : {intent: intent, searchState: {originalPropertyResults: propertiesList, activeSearchCriteria: mergedRequiredSearchCriteria, activeFilters: propertyFilterExtractionResult.activeFilters}}};
 
         case "real_estate":
             const realEstateResponse = await answerRealEstateQuestions(userQuery)
             return { type: "text", content: realEstateResponse.response };
 
-        case "clarification":
-
-            // figure out what needs to happen here... respond to the user with a string to clarify and capture that in the front end and feed it back into the function with the new user query and maybe the intent if we want to skip re-classifying intent with the new query since we know its just a clarification of the previous intent
-            return { type: "text", content: `this is a response for clarification intent with confidence: ${intent.confidence}` };
-
-        case "refinement":
-            // take past property array context, pass it all in to filter, return property array back based on that refinement from the user query 
-            if (context?.searchState?.originalPropertyResults != null) {
-                const allProperties = context?.searchState?.originalPropertyResults;
-                
-                // take all the current properties, send it into LLM with the user query and instructions to refine the list based on the user query and return back a refined list of properties based on that
-
-                // function here with parameters, user query, and property list context --> that function has the system prompt for it and calls the LLM and returns the refined list of properties based on that user query refinement request
-                // const filteredProperties --> have a different return type. PropertyArray probably
-                const filteredPropertyIdsResponse = await refinePropertySearch(userQuery, stripMediaData(allProperties)); 
-                
-                return { type: "text", propertyIds: filteredPropertyIdsResponse.ids };
-            } else {
-                return { type: "text", content: "Error: The propertyList is blank" };
-            }
-
         case "specific_property":
-
             // Sanity check 
             if (context?.selectedProperties != null) {
                 // take singular property context, pass it all in to property LLM, return answers as a string
@@ -179,6 +186,35 @@ function getFilter(filters: FilterItem[], key: string, operator?: PropertyOperat
     return filters.find(filter => filter.key === key && (operator ? filter.operator === operator : true));
 }
 
+// convert extracted criteria into active so we can combine and ensure we have required
+function buildSearchCriteria(filters: FilterItem[]): ActiveSearchCriteria {
+    const criteria: ActiveSearchCriteria = {};
 
+    for (const filter of filters) {
+        if (filter.key === "City") {
+            criteria.city = filter.value as string;
+        } else if (filter.key === "ListPrice") {
+            if (filter.operator === "ge") {
+                criteria.minPrice = filter.value as number;
+            } else if (filter.operator === "le") {
+                criteria.maxPrice = filter.value as number;
+            }
+        }
+    }
+    return criteria;
+}
 
-
+// build that into the MLSBaseFilters to get OdataQuery built
+function buildMLSBaseFilters(criteria: ActiveSearchCriteria): FilterItem[] {
+    const filters: FilterItem[] = [];
+    if (criteria.city) {
+        filters.push({ key: "city", value: criteria.city, operator: "eq" });
+    }
+    if (criteria.minPrice !== undefined) {
+        filters.push({ key: "ListPrice", value: criteria.minPrice, operator: "ge" });
+    }
+    if (criteria.maxPrice !== undefined) {
+        filters.push({ key: "ListPrice", value: criteria.maxPrice, operator: "le" });
+    }
+    return filters;
+}
