@@ -1,100 +1,38 @@
 import { Property, Room, Washroom } from "../types/property";
+import { chunkArray } from "../utils/arrayUtils";
 
-
-export async function fetchPropertiesWithRoomsMedia(odataQuery: string, resultCount: number): Promise<Property[]> {
+/* Function that fetches properties with associated rooms and media calls made sequentially */
+export async function fetchMLSProperties(odataQuery: string, resultCount: number): Promise<Property[]> {
     const webURL = process.env.MLS_API_ENDPOINT;
-    const rawProperties = await fetchMLSProperties(webURL, odataQuery);
 
+    // get properties base data
+    const rawProperties = await fetchMLSPropertiesBase(webURL, odataQuery);
+
+    // extract property IDs for room and media fetching
     const propertyIDs = rawProperties.map(p => p.id);
 
-    const roomPropertyMap = await fetchMLSRoomProperties(webURL, propertyIDs)
+    // get rooms data
+    const roomPropertyMap = await fetchMLSPropertiesRoom(webURL, propertyIDs)  
 
-    /* Added fix for media responses to do singular mapping call s */
-    const mediaResponses = await Promise.all(
-        propertyIDs.map(async (propertyID) => {
+    // get media data
+    const mediaMap = await fetchMLSPropertiesMedia(webURL, propertyIDs);
 
-            const mediaURL =
-                `${webURL}/odata/Media?$filter=ResourceRecordKey eq '${propertyID}'`;
-
-            const response = await fetch(mediaURL, {
-                method: "GET",
-                headers: {
-                    Accept: "application/json",
-                    Authorization: `Bearer ${process.env.MLS_TOKEN}`,
-                },
-                cache: "no-store",
-            });
-
-            if (!response.ok) {
-                const errorText = await response.text();
-
-                throw new Error(
-                    `MLS Media request failed (${response.status}) for ${propertyID}: ${errorText}`
-                );
-            }
-
-            const jsonData = await response.json();
-
-            return jsonData.value ?? [];
-        })
-    );
-    const mediaList = mediaResponses.flat();
-
-    // filter the mediaList to only have largest images
-    const filteredSortedMedia = mediaList
-        .filter(
-            (mediaItem) =>
-                mediaItem.ImageSizeDescription == "Largest"
-        )
-        // updated sort function for priority ranking in images... 
-        .sort((a, b) => {
-
-            // 1. Preferred photo first
-            if (a.PreferredPhotoYN && !b.PreferredPhotoYN) return -1;
-            if (!a.PreferredPhotoYN && b.PreferredPhotoYN) return 1;
-
-            // 2. Valid order next
-            if (a.Order !== b.Order) {
-                return a.Order - b.Order;
-            }
-
-            // 3. Oldest upload first (fallback)
-            return (
-                new Date(a.MediaModificationTimestamp).getTime() -
-                new Date(b.MediaModificationTimestamp).getTime()
-            );
-        })
-
-    const mediaMap = new Map<string, string[]>();
-
-    for (const mediaItem of filteredSortedMedia) {
-        // update the array of image urls for the propertyID, adding them on if not there
-        // ensure the image isn't already there, look for size largest and add that
-        // technically if I just check the size being largest and push that URL it won't matter that imageID
-        // this would get us every large image in the list for each propertyID
-        if (!mediaMap.has(mediaItem.ResourceRecordKey)) {
-            mediaMap.set(mediaItem.ResourceRecordKey, []);
-        }
-
-        // get existing array in map and push values into it
-        // only do this if the image is the largest for that property
-        mediaMap.get(mediaItem.ResourceRecordKey)?.push(mediaItem.MediaURL);
-    }
-
+    /* Put it all together */
     // loop through and update each of the property with list of rooms and list of media images
     for (const property of rawProperties) {
-        property.roomList = roomPropertyMap.get(property.id)
+        const rooms = roomPropertyMap.get(property.id) ?? [];
+        const mediaImages = mediaMap.get(property.id) ?? [];
 
-        // map media here in a similar manner (gets array of media URLs for that id from the map) 
-        property.mediaImages = mediaMap.get(property.id)
-
+        property.roomList = rooms;
+        property.mediaImages = mediaImages;
     }
 
     // TODO: Figure out array indices syntax 
     return rawProperties;
 }
 
-async function fetchMLSProperties(webAPIAddress: string | undefined, odataFilter: string, top?: number): Promise<Property[]> {
+/* Function to fetch base MLS Properties Base Data */
+async function fetchMLSPropertiesBase(webAPIAddress: string | undefined, odataFilter: string, top?: number): Promise<Property[]>{
     const url = `${webAPIAddress}/odata/Property?$filter=${odataFilter}`;
     console.log("Fetching properties with URL:", url, "and filter:", odataFilter);
 
@@ -232,29 +170,38 @@ async function fetchMLSProperties(webAPIAddress: string | undefined, odataFilter
     }));
 
 }
+/* Function to fetch MLS Properties Room Data */
+async function fetchMLSPropertiesRoom(webAPIAddress: string | undefined, propertyIDs: string[]): Promise<Map<string, Room[]>> {
 
-async function fetchMLSRoomProperties(webAPIAddress: string | undefined, propertyIDs: string[]): Promise<Map<string, Room[]>> {
-    const url = `${webAPIAddress}/odata/PropertyRooms?$filter=ListingKey in (${propertyIDs.map(id => `'${id}'`).join(",")})`;
-    console.log("Fetching properties with URL:", url);
+    const chunks = chunkArray(propertyIDs, 5); // chunk into groups of 5 to avoid URL length issues
 
-    const response = await fetch(url, {
-        method: "GET",
-        headers: {
-            Accept: "application/json",
-            Authorization: `Bearer ${process.env.MLS_TOKEN}`,
-        },
-        cache: "no-store",
-    });
+    const responses = await Promise.all(chunks.map(async (chunk) => {
+        const url = `${webAPIAddress}/odata/PropertyRooms?$filter=ListingKey in (${chunk.map(id => `'${id}'`).join(",")})`;
+        console.log("Fetching properties with URL:", url);
 
-    if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`MLS Property request failed- (${response.status}): ${errorText}`)
-    }
-    // get response json data
-    const jsonData = await response.json();
 
-    // get value which is an array of rooms across all properties
-    const propertiesListWithRoomData = jsonData.value;
+    
+        const response = await fetch(url, {
+            method: "GET",
+            headers: { 
+                Accept: "application/json",
+                Authorization: `Bearer ${process.env.MLS_TOKEN}`,
+            },
+            cache: "no-store",
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`MLS Property request failed- (${response.status}): ${errorText}`)
+        }
+        // get response json data
+        const jsonData = await response.json();
+        
+        return jsonData.value ?? [];
+    }));
+
+    // Flatten to get value which is an array of rooms across all properties
+    const propertiesListWithRoomData = responses.flat();
 
     const roomMap = new Map<string, Room[]>();
 
@@ -285,6 +232,85 @@ async function fetchMLSRoomProperties(webAPIAddress: string | undefined, propert
     return roomMap;
 }
 
+/* Function to fetch MLS Properties Media Data */
+async function fetchMLSPropertiesMedia(webAPIAddress: string | undefined, propertyIDs: string[]): Promise<Map<string, string[]>> {
+     /* Added fix for media responses to do singular mapping call  */
+    const mediaResponses = await Promise.all(
+        propertyIDs.map(async (propertyID) => {
+
+            const mediaURL =
+                `${webAPIAddress}/odata/Media?$filter=ResourceRecordKey eq '${propertyID}'`;
+
+            const response = await fetch(mediaURL, {
+                method: "GET",
+                headers: {
+                    Accept: "application/json",
+                    Authorization: `Bearer ${process.env.MLS_TOKEN}`,
+                },
+                cache: "no-store",
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+
+                throw new Error(
+                    `MLS Media request failed (${response.status}) for ${propertyID}: ${errorText}`
+                );
+            }
+
+            const jsonData = await response.json();
+
+            return jsonData.value ?? [];
+        })
+    );
+    const mediaList = mediaResponses.flat();
+
+    // filter the mediaList to only have largest images
+    const filteredSortedMedia = mediaList
+    .filter(
+        (mediaItem) =>
+            mediaItem.ImageSizeDescription == "Largest"
+    ) 
+    // updated sort function for priority ranking in images... 
+    .sort((a, b) => {
+
+        // 1. Preferred photo first
+        if (a.PreferredPhotoYN && !b.PreferredPhotoYN) return -1;
+        if (!a.PreferredPhotoYN && b.PreferredPhotoYN) return 1;
+
+        // 2. Valid order next
+        if (a.Order !== b.Order) {
+            return a.Order - b.Order;
+        }
+
+        // 3. Oldest upload first (fallback)
+        return (
+            new Date(a.MediaModificationTimestamp).getTime() -
+            new Date(b.MediaModificationTimestamp).getTime()
+        );
+    })
+
+    const mediaMap = new Map<string, string[]>();
+
+    for (const mediaItem of filteredSortedMedia) {
+        // update the array of image urls for the propertyID, adding them on if not there
+        // ensure the image isn't already there, look for size largest and add that
+        // technically if I just check the size being largest and push that URL it won't matter that imageID
+        // this would get us every large image in the list for each propertyID
+        if (!mediaMap.has(mediaItem.ResourceRecordKey)) {
+            mediaMap.set(mediaItem.ResourceRecordKey, []);
+        }
+
+        // get existing array in map and push values into it
+        // only do this if the image is the largest for that property
+        mediaMap.get(mediaItem.ResourceRecordKey)?.push(mediaItem.MediaURL);            
+    }
+
+    return mediaMap;
+}
+
+
+
 /* Refine property search function */
 // LLM function with properties passed through (stored array in storage)
 // Figure out where and how to save user content and field values 
@@ -293,6 +319,7 @@ async function fetchMLSRoomProperties(webAPIAddress: string | undefined, propert
 // Property with ID -> Same functions as above except with IDs 
 export async function getPropertyByID(listingID: string): Promise<Property> {
     const odataQuery = `ListingKey eq '${listingID}'`;
-    const property = await fetchPropertiesWithRoomsMedia(odataQuery, 1);
+    const property = await fetchMLSProperties(odataQuery, 1);
     return property[0];
 }
+ 
