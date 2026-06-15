@@ -3,13 +3,13 @@
 
 import { BaseResult } from "@/lib/types/chat";
 import { generateOutput } from "./llmService";
-import { Property } from "@/lib/types/property";
+import { PropertyWithoutMedia } from "@/lib/types/property";
 
-export async function answerSpecializedPropertyQuestions (userQuery: string, property?: Property): Promise<BaseResult> {
+export async function answerSpecializedPropertyQuestions (userQuery: string, properties?: PropertyWithoutMedia[]): Promise<BaseResult> {
 
     // Instructions for how the AI should take the user query and work with it
     const systemPrompt = 
-    `You are an expert on real estate, helping answer questions for new home buyers. Answer any questions using the context of this property's descriptors: %${JSON.stringify(property)}%` 
+    `You are an expert on real estate, helping answer questions for new home buyers. Answer any questions including comparing properties values using the context of these properties' descriptors: %${JSON.stringify(properties)}%` 
 
     // Define the expected schema for the LLM response to ensure we get structured data back that we can work with
     const baseResponseSchema = {

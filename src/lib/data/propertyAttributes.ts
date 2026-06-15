@@ -5,95 +5,83 @@ export const MLS_ATTRIBUTES = [
     {
         name: "City",
         type: "string",
-        synonyms: ["city", "town", "location", "area", "neighborhood", "in", "near", "around"]
-    },
-    {
-        name: "BedroomsTotal",
-        type: "number",
-        synonyms: ["bedrooms", "bedroom", "bdrms", "bdrm"]
-    },
-    {
-        name: "BathroomsTotalInteger",
-        type: "number",
-        synonyms: ["bathrooms", "bathroom", "baths", " bath", "washroom", "washrooms", "restroom", "restrooms"]
-    },
-    {
-        name: "BuildingAreaTotal",
-        type: "number",
-        synonyms: ["square footage", "sq ft", "sqft"]
-    },
-    {
-        name: "ApproximateAge",
-        type: "number",
-        synonyms: ["Age", "Built in", "Older than", "years"]
-    },
-    {
-        name: "AttachedGarageExistance",
-        type: "boolean",
-        synonyms: ["Garage"]
-    },
-    {
-        name: "BalconyType",
-        type: "string",
-        synonyms: ["Balcony"]
-    },
-    {
-        name: "BasementDetails",
-        type: "string",
-        synonyms: ["Basement", "bsmt", "finished", "unfinished", "Separate Entrance"]
-    },
-    {
-        name: "Cooling",
-        type: "string",
-        synonyms: ["cooling", "AC", "air"]
-    },
-    {
-        name: "DirectionFaces",
-        type: "string",
-        synonyms: ["north", "east", "south", "west", "direction"]
+        description: "City or municpality where the property is located"
     },
     {
         name: "ListPrice",
         type: "number",
-        synonyms: ["price", "cost" , "$"]
-    },
-    {
-        name: "LotDepth",
-        type: "number",
-        synonyms: ["lot"]
-    },
-    {
-        name: "LotWidth",
-        type: "number",
-        synonyms: ["lot"]
-    },
-    {
-        name: "ParkingSpaces",
-        type: "number",
-        synonyms: ["parking", "driveway", "car"]
-    },
-    {
-        name: "StreetName",
-        type: "string",
-        synonyms: ["street", "drive", "court", "way", "trail", "grove", "crescent", "court", "ln", "lane", "ct", "avenue", "rd", "road", "parkway", "place"]
-    },
-    {
-        name: "TaxAnnualAmount",
-        type: "number",
-        synonyms: ["tax"]
+        description: "The listed price of the property"
     }
-    
-    // rest of attributes to be added
-    // add the attributes to be found then extracted, mapping what could be attributes based on the userinput
-    // We can have core required ones as base
-    // any additionals would be added
-    // extraction prompt extracts the relevant values to Odata string--> gets properties
-
-    // rest would be refined 
-
-    // SOME OF THESE COULD BE NEEDED AS CORE SINCE 
-
-    // Combine with whats core and send the combination of both
-    // Somehow map it where some attributes can be that attribute "or" null given bad data 
-
 ]
+
+// {
+    //     name: "BedroomsTotal",
+    //     type: "number",
+    //     description: "Total number of bedrooms in the property",
+    // }
+    // {
+    //     name: "BathroomsTotalInteger",
+    //     type: "number",
+    //     description: "Total number of bathrooms in the property"
+    // },
+    // {
+    //     name: "BuildingAreaTotal",
+    //     type: "number",
+    //     description: "square footage of the home"
+    // },
+    // {
+    //     name: "ApproximateAge",
+    //     type: "number",
+    //     description: "Approximate age of the property"
+    // },
+    // {
+    //     name: "AttachedGarageExistance",
+    //     type: "boolean",
+    //     description: "Indicates if the property has an attached garage"
+    // },
+    // {
+    //     name: "BalconyType",
+    //     type: "string",
+    //     description: "Type of balcony available"
+    // },
+    // {
+    //     name: "BasementDetails",
+    //     type: "string",
+    //     description: "Finished basement, unfinished basement, separate entrance basement"
+
+    // },
+    // {
+    //     name: "Cooling",
+    //     type: "string",
+    //     description: "Type of cooling system available"
+    // },
+    // {
+    //     name: "DirectionFaces",
+    //     type: "string",
+    //     description: "The direction the property faces"
+    // },
+    // {
+    //     name: "LotDepth",
+    //     type: "number",
+    //     description: "Depth of the lot"
+    // },
+    // {
+    //     name: "LotWidth",
+    //     type: "number",
+    //     description: "Width of the lot"
+    // },
+    // {
+    //     name: "ParkingSpaces",
+    //     type: "number",
+    //     description: "Number of parking spaces available"
+    // },
+    // {
+    //     name: "StreetName",
+    //     type: "string",
+    //     description: "Street name of the propery using examples like: street, drive, court, way, trail, grove, crescent, court, ln, lane, ct, avenue, rd, road, parkway, place"
+    // },
+    // {
+    //     name: "TaxAnnualAmount",
+    //     type: "number",
+    //     description: "Annual tax amount for the property"
+    // }

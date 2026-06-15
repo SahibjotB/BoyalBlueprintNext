@@ -128,8 +128,19 @@ export type Property = {
 
 export type PropertyWithoutMedia = Omit<Property, "mediaImages">;
 
+export type PropertyAddress = {
+    id: string;
+    address: string;
+}
+
 // transformer function
 export function stripMediaData(properties: Property[]): PropertyWithoutMedia[] {
     return properties.map(({ mediaImages, ...rest }) => rest);
 }
 
+export function mapPropertyAddressData(properties: Property[]): PropertyAddress[] {
+    return properties.map(property => ({
+        id: property.id,
+        address: property.address.unparsedAddress
+    }));
+}
