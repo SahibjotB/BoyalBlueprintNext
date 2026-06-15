@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import PropertyDetailsModal from "../components/PropertyDetailsModal";
 import { Property } from "@/lib/types/property";
-import { saveProperties, getSavedProperties } from "@/lib/services/storageService";
+import { saveProperties, getSavedProperties, updateChatContext, getSavedChatContext } from "@/lib/services/storageService";
 
 interface Message {
   id: string;
@@ -124,10 +124,7 @@ export default function AiSearchPage() {
     setIsTyping(true);
 
     try {
-      // Gather property context from all previous message lists
-      const propertyListContext = messages.flatMap(m => m.properties || []);
-      const firstTimeRunFlag = messages.length === 0;
-
+      const savedContext = getSavedChatContext() || {};
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -135,15 +132,20 @@ export default function AiSearchPage() {
         },
         body: JSON.stringify({
           userQuery: queryText,
-          context: {
-            propertyListContext: propertyListContext.length > 0 ? propertyListContext : undefined,
-            firstTimeRunFlag
-          }
+          context: savedContext
         })
       });
 
       const data = await res.json();
       setIsTyping(false);
+
+      if (data.contextUpdate) {
+        try {
+          updateChatContext(data.contextUpdate);
+        } catch (storageError) {
+          console.warn("Could not save chat context (possibly quota exceeded):", storageError);
+        }
+      }
 
       let botText = "I found some matching listings for you.";
       let properties: Property[] = [];

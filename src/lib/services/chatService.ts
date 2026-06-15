@@ -56,7 +56,7 @@ export async function handleChat(userQuery: string, context?: ChatContext): Prom
 
             // check extracted missing fields against the merged extracted fields and previous context fields. removing any that are present already
             let missingFields = [...propertyFilterExtractionResult.missingFields];
-            
+
             missingFields = missingFields.filter(field => {
                 switch (field) {
                     case "City":
@@ -79,8 +79,8 @@ export async function handleChat(userQuery: string, context?: ChatContext): Prom
             if (missingFields.length > 0) {
                 // return with clarification type and content to show to the user and also update the context with what fields are missing so that when the user responds with the clarification we have that context available to know what they are clarifying about 
                 return { type: "clarification", missingFields: propertyFilterExtractionResult.missingFields, contextUpdate: { intent: intent, pendingClarification: undefined, searchState: { ...context?.searchState, activeSearchCriteria: mergedRequiredSearchCriteria, activeFilters: mergedActiveFilters } } };
-            }   
-            
+            }
+
             /* BASE MLS Filtering logic: get values here and then build OData query string to send to the property API to get results back based on those filters. */
             const MLSBaseFilter = buildMLSBaseFilters(mergedRequiredSearchCriteria);
             const odataQueryString = await buildODataQuery(MLSBaseFilter);
@@ -99,7 +99,7 @@ export async function handleChat(userQuery: string, context?: ChatContext): Prom
             let refinedPropertyResults = context?.searchState?.refinedPropertyResults;
 
             // Either search context has changed or there is no existing property list so query MLS for new list or else just use the one from context given no change
-            if(hasSearchCriteriaChanged(context?.searchState?.activeSearchCriteria, MLSBaseFilter) || context?.searchState?.originalPropertyResults == null || context?.searchState?.originalPropertyResults.length == 0) {
+            if (hasSearchCriteriaChanged(context?.searchState?.activeSearchCriteria, MLSBaseFilter) || context?.searchState?.originalPropertyResults == null || context?.searchState?.originalPropertyResults.length == 0) {
                 propertiesList = await fetchMLSProperties(odataQueryString, 5);
                 refinedPropertyResults = undefined;
 
@@ -117,42 +117,42 @@ export async function handleChat(userQuery: string, context?: ChatContext): Prom
                 // if there is something to refine.. if there is an existing list, refine that list first.. if there isn't a list or its the first search with extra criteria refine the original
                 if (refinedPropertyResults != null && refinedPropertyResults.length > 0) {
                     // refining off the current user query since we already accounted for the other filters in refinement
-                    const filteredPropertyIdsResponse = await refinePropertySearch(userQuery, stripMediaData(refinedPropertyResults)); 
+                    const filteredPropertyIdsResponse = await refinePropertySearch(userQuery, stripMediaData(refinedPropertyResults));
                     refinedPropertiesList = refinedPropertyResults.filter(property => filteredPropertyIdsResponse.ids.includes(property.id));
 
                     // if refined gives 0... refine the original property list
                     if (refinedPropertiesList.length == 0 && context?.searchState?.originalPropertyResults != null) {
                         // run the refinement again with the original results to narrow that down
-                        const filteredPropertyIdsResponse = await refinePropertySearch(userQuery, stripMediaData(propertiesList)); 
+                        const filteredPropertyIdsResponse = await refinePropertySearch(userQuery, stripMediaData(propertiesList));
                         refinedPropertiesList = propertiesList.filter(property => filteredPropertyIdsResponse.ids.includes(property.id));
                     }
                 } else {
                     // filter off regular property list without ever using the refinement list (isn't one yet). // user query for the first refinement keeps track of all filters (since its base refinement)
-                    const filteredPropertyIdsResponse = await refinePropertySearch(improvedUserQuery, stripMediaData(propertiesList)); 
+                    const filteredPropertyIdsResponse = await refinePropertySearch(improvedUserQuery, stripMediaData(propertiesList));
                     refinedPropertiesList = propertiesList.filter(property => filteredPropertyIdsResponse.ids.includes(property.id));
                 }
                 // if there is refinement. return main list as the refined one and store the original and refined 
-                return { type: "property_search", properties: refinedPropertiesList, contextUpdate : {intent: intent, pendingClarification: undefined, searchState: {originalPropertyResults: propertiesList, refinedPropertyResults: refinedPropertiesList, activeSearchCriteria: mergedRequiredSearchCriteria, activeFilters: mergedActiveFilters}}};
+                return { type: "property_search", properties: refinedPropertiesList, contextUpdate: { intent: intent, pendingClarification: undefined, searchState: { originalPropertyResults: propertiesList, refinedPropertyResults: refinedPropertiesList, activeSearchCriteria: mergedRequiredSearchCriteria, activeFilters: mergedActiveFilters } } };
             }
 
             // Return array of Property objects (nothing refined)
-            return { type: "property_search", properties: propertiesList, contextUpdate : {intent: intent, pendingClarification: undefined, searchState: {originalPropertyResults: propertiesList, activeSearchCriteria: mergedRequiredSearchCriteria, activeFilters: mergedActiveFilters}}};
+            return { type: "property_search", properties: propertiesList, contextUpdate: { intent: intent, pendingClarification: undefined, searchState: { originalPropertyResults: propertiesList, activeSearchCriteria: mergedRequiredSearchCriteria, activeFilters: mergedActiveFilters } } };
 
         case "real_estate":
             const realEstateResponse = await answerRealEstateQuestions(userQuery)
             return { type: "text", content: realEstateResponse.response, contextUpdate: { pendingClarification: undefined } };
 
-        case "specific_property": 
+        case "specific_property":
             // check if there's a property list to search against
             if (!context?.searchState?.originalPropertyResults || context.searchState.originalPropertyResults.length == 0) {
-                return { type: "text", content: "No property search results to reference for your question", contextUpdate: { pendingClarification: undefined }};
+                return { type: "text", content: "No property search results to reference for your question", contextUpdate: { pendingClarification: undefined } };
             }
 
             // check to see if its clarifying from previous context
             if (context?.pendingClarification?.type == "property_selection") {
                 userQuery = `${context.pendingClarification.originalQuestion} ${userQuery}`;
             }
-        
+
             // check to see if there is new address context
             // search for property out of the given list of properties using the property address street name 
             const propertyAddressContextList = mapPropertyAddressData(context.searchState?.originalPropertyResults);
@@ -160,7 +160,7 @@ export async function handleChat(userQuery: string, context?: ChatContext): Prom
             const identifiedProperties = context.searchState.originalPropertyResults.filter(property => identifiedPropertyResponse.ids.includes(property.id));
 
             let targetProperties: Property[] = [];
-            
+
             // check to see if this new one is a comparison to a previous context property question (exists in selected properties)
 
             if (identifiedProperties.length > 0 && context?.selectedProperties?.length && isComparisonBased(userQuery)) {
@@ -171,7 +171,7 @@ export async function handleChat(userQuery: string, context?: ChatContext): Prom
                 for (const property of context.selectedProperties) {
                     merged.set(property.id, property);
                 }
-                
+
                 // same for all properties that were passed in from query extraction finding
                 for (const property of identifiedProperties) {
                     merged.set(property.id, property);
@@ -179,24 +179,24 @@ export async function handleChat(userQuery: string, context?: ChatContext): Prom
 
                 // convert this into target array with just the values to answer the question about
                 targetProperties = Array.from(merged.values());
-            // if it finds properties directly from the query, just use those (replacing the previous since its not comparison based)
+                // if it finds properties directly from the query, just use those (replacing the previous since its not comparison based)
             } else if (identifiedProperties.length > 0) {
                 targetProperties = identifiedProperties
-            // if there isn't any properties in this user query but some in past context then use that to answer questions
+                // if there isn't any properties in this user query but some in past context then use that to answer questions
             } else if (context?.selectedProperties?.length && identifiedProperties.length === 0 && !isComparisonBased(userQuery)) {
                 targetProperties = context.selectedProperties;
             } else {
-                return { type: "text", content: "Couldn't find the property you're asking about from the list. Please try again",  contextUpdate: { pendingClarification: undefined }};      
+                return { type: "text", content: "Couldn't find the property you're asking about from the list. Please try again", contextUpdate: { pendingClarification: undefined } };
             }
 
             // if its ambiguious since there is previously multiple properties in history, then ask user which one
-        
+
             // if there's multiple properties in the identified Target list but the current query doesn't identify any of them. we have to figure out how to answer the question regarding those
             if (targetProperties.length > 1 && identifiedProperties.length === 0) {
                 const addresses = targetProperties.map(p => p.address.unparsedAddress).join(" or ");
 
                 // question the user with a response
-                return {type: "text", content: `which property are you referring to: ${addresses}?`, contextUpdate: {intent, selectedProperties: targetProperties, pendingClarification: { type: "property_selection", originalQuestion: userQuery }}};
+                return { type: "text", content: `which property are you referring to: ${addresses}?`, contextUpdate: { intent, selectedProperties: targetProperties, pendingClarification: { type: "property_selection", originalQuestion: userQuery } } };
             }
 
             // call function, pass these things --> that function has the system prompt for it and calls the LLM and returns the response for that specific property question
@@ -207,7 +207,7 @@ export async function handleChat(userQuery: string, context?: ChatContext): Prom
 
         case "other":
             return { type: "text", content: `this is a response for other intent with confidence: ${intent.confidence}`, contextUpdate: { pendingClarification: undefined } };
-        
+
         default:
             return { type: "text", content: `could not classify intent with confidence: ${intent.confidence}`, contextUpdate: { pendingClarification: undefined } };
     }
@@ -272,7 +272,7 @@ function buildMLSBaseFilters(criteria: ActiveSearchCriteria): FilterItem[] {
 }
 
 // check if user is asking to compare new properties to previous ones in context
-function isComparisonBased (userQuery: string): boolean {
+function isComparisonBased(userQuery: string): boolean {
     const query = userQuery.toLowerCase();
 
     return [
@@ -302,7 +302,7 @@ function mergeActiveFilters(existing: ActiveFilter[], currentQuery: ActiveFilter
     for (const filter of currentQuery) {
         combineMap.set(filter.key, filter);
     }
-    
+
     // flatten this combined map that has all unique keys to get an array of activeFilters we originally had
     return Array.from(combineMap.values());
 }
@@ -312,6 +312,6 @@ function buildFilterContext(filters: ActiveFilter[]) {
     if (!filters || filters.length == 0) return "";
 
     return filters
-        .map (filter => `-${filter.key}: ${JSON.stringify(filter.value)})`)
+        .map(filter => `-${filter.key}: ${JSON.stringify(filter.value)})`)
         .join("\n");
 }
