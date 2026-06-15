@@ -2,11 +2,16 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
 export default function Footer() {
+  const pathname = usePathname();
+  const isAiSearch = pathname === '/ai-search';
   const [showFooter, setShowFooter] = useState(false);
 
   useEffect(() => {
+    if (isAiSearch) return;
+
     const handleScroll = () => {
       // Check if the user has scrolled to the bottom of the page
       const isBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 50;
@@ -18,6 +23,8 @@ export default function Footer() {
     
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  if (isAiSearch) return null;
 
   return (
     <>

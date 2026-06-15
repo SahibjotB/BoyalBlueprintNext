@@ -19,8 +19,57 @@
   }
 }
 
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+/* AI Search Page Root Layout overrides to prevent white borders/bars */
+html.ai-search-page, body.ai-search-page {
+  overflow: hidden !important;
+  height: 100% !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+html.ai-search-page::-webkit-scrollbar,
+body.ai-search-page::-webkit-scrollbar,
+.ai-search-page ::-webkit-scrollbar {
+  display: none !important;
+}
+
+body.ai-search-page {
+  background: linear-gradient(to bottom, #FCE4D6 30%, #fef4ed, #ffffff) !important;
+  background-attachment: fixed !important;
+}
+
+body.ai-search-page.searched {
+  background: linear-gradient(to bottom, #FFFDFB, #fef4ed, #FCE4D6) !important;
+  background-attachment: fixed !important;
+}
+

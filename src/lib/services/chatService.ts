@@ -27,17 +27,17 @@ import { fetchMLSProperties } from "./propertyService";
 export async function testIntent(userQuery: string, context?: ChatContext): Promise<ChatResult> {
     const intent = context?.intent ?? await identifyIntent(userQuery);
     console.log(`this is the intent ${intent.intent}`);
-    return { type: "text", content: `this is a response for ${intent.intent} intent with confidence: ${intent.confidence}` }; 
+    return { type: "text", content: `this is a response for ${intent.intent} intent with confidence: ${intent.confidence}` };
 }
 
 // Expand to handle session context and saving 
 export async function handleChat(userQuery: string, context?: ChatContext): Promise<ChatResult> {
 
     // 1) Classify intent of message with intent service (or use passed intent if available from front end context)
-    const intent = context?.intent ?? await identifyIntent(userQuery);
+    const intent = context?.intent ?? await identifyIntent(userQuery, context?.firstTimeRunFlag);
 
     // 2) Act upon the identified intent with different behaviors for chat returns
-    switch(intent.intent) {
+    switch (intent.intent) {
         // Return with ChatResult type makes it easy to handle what comes back in the front end and ensures we have a consistent format for all responses
         case "property_search":
             let propertiesList: Property[] = [];
