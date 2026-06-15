@@ -87,6 +87,11 @@ export type ChatHistoryItem = {
     intent: Intent;
 };
 
+export type PendingClarification = {
+    type: "property_selection";
+    originalQuestion: string;
+}
+
 export type ActiveSearchCriteria = {
     city?: string;
     minPrice?: number;
@@ -112,6 +117,8 @@ export type ChatContext = {
     intent?: IntentResult;
 
     selectedProperties?: Property[];
+
+    pendingClarification?: PendingClarification;
 
     missingFields?: string[];
 
