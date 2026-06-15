@@ -44,6 +44,7 @@ export async function handleChat(userQuery: string, context?: ChatContext): Prom
 
             // calls to extraction service 
             const propertyFilterExtractionResult = await extractPropertyValues(userQuery);
+            console.log(propertyFilterExtractionResult);
 
             // Build search criteria and take into account any previous mentions of that criteria, merge those together
             const extractedRequiredSearchCriteria = buildSearchCriteria(propertyFilterExtractionResult.filters);

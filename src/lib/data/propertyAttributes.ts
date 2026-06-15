@@ -12,7 +12,9 @@ export const MLS_ATTRIBUTES = [
         type: "number",
         description: "The listed price of the property"
     }
-    // {
+]
+
+// {
     //     name: "BedroomsTotal",
     //     type: "number",
     //     description: "Total number of bedrooms in the property",
@@ -83,4 +85,3 @@ export const MLS_ATTRIBUTES = [
     //     type: "number",
     //     description: "Annual tax amount for the property"
     // }
-]
