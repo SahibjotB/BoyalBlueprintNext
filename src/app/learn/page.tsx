@@ -1,7 +1,29 @@
+"use client";
+
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 
 export default function LearnPage() {
+  const handleDownloadResources = () => {
+    const files = [
+      '/learn-mortgage.pdf',
+      '/learn-down-payments.pdf',
+      '/learn-realtors.pdf'
+    ];
+
+    files.forEach((file, index) => {
+      // Small delay to ensure the browser processes all downloads
+      setTimeout(() => {
+        const link = document.createElement('a');
+        link.href = file;
+        link.download = file.split('/').pop() || '';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }, index * 200);
+    });
+  };
+
   return (
     <main className="flex flex-col w-full min-h-screen bg-white">
       {/* Top Split Hero Section */}
@@ -31,8 +53,8 @@ export default function LearnPage() {
                   Don't Get Caught With Hidden Fees
                 </h3>
                 <a
-                  href="/learn-pdf.pdf"
-                  download="learn-pdf"
+                  href="/learn-hidden-fees.pdf"
+                  download="learn-hidden-fees.pdf"
                   className="text-sm font-bold flex items-center gap-1.5 hover:underline text-black"
                 >
                   Download PDF <ArrowRight className="w-4 h-4" />
@@ -46,12 +68,15 @@ export default function LearnPage() {
         <div className="md:w-1/2 w-full bg-white flex items-center p-8 md:p-16 lg:p-24">
           <div className="max-w-xl">
 
-            
+
             <p className="text-gray-500 font-medium mb-4 text-lg font-serif">Free Resources</p>
             <h1 className="text-4xl md:text-5xl lg:text-[56px] font-bold text-black leading-[1.05] tracking-tight mb-10">
               Access free resources that jump start your home-buying journey
             </h1>
-            <button className="bg-[#f97316] hover:bg-orange-600 text-white font-semibold py-3.5 px-8 rounded-lg transition-colors text-lg shadow-sm">
+            <button
+              onClick={handleDownloadResources}
+              className="bg-[#f97316] hover:bg-orange-600 text-white font-semibold py-3.5 px-8 rounded-lg transition-colors text-lg shadow-sm"
+            >
               Get Resources
             </button>
           </div>
@@ -78,10 +103,10 @@ export default function LearnPage() {
               <path d="M2 12h20"></path>
               <path d="M12 2v10"></path>
             </svg>
-            <h3 className="text-2xl font-bold text-black mb-4 pr-4 leading-snug">
+            <h3 className="text-[16px] tracking-tight font-bold text-black mb-4 leading-snug whitespace-nowrap">
               Understanding Your Down Payment
             </h3>
-            <p className="text-gray-700 text-[17px] leading-relaxed">
+            <p className="text-gray-700 font-serif text-[16px] leading-relaxed">
               We believe better decisions start with better data—measured, visible, and
               trusted.
             </p>
@@ -104,10 +129,10 @@ export default function LearnPage() {
               <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
               <path d="M2 12h20"></path>
             </svg>
-            <h3 className="text-2xl font-bold text-black mb-4 pr-4 leading-snug">
+            <h3 className="text-[16px] tracking-tight font-bold text-black mb-4 leading-snug whitespace-nowrap">
               Finding Your Right Mortgage
             </h3>
-            <p className="text-gray-700 text-[17px] leading-relaxed">
+            <p className="text-gray-700 font-serif text-[16px] leading-relaxed">
               We build tools that help teams connect the dots between operations, impact,
               and accountability.
             </p>
@@ -130,10 +155,10 @@ export default function LearnPage() {
               <path d="M8 16L16 8"></path>
               <path d="M8 8h8v8"></path>
             </svg>
-            <h3 className="text-2xl font-bold text-black mb-4 pr-4 leading-snug">
+            <h3 className="text-[16px] tracking-tight font-bold text-black mb-4 leading-snug whitespace-nowrap">
               Don't Get Caught With Hidden Fees
             </h3>
-            <p className="text-gray-700 text-[17px] leading-relaxed">
+            <p className="text-gray-700 font-serif text-[16px] leading-relaxed">
               We support real-world momentum—helping organizations move from ambition to
               measurable change.
             </p>

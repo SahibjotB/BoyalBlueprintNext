@@ -4,6 +4,7 @@ import Spline from '@splinetool/react-spline';
 import AiRealtor from './components/AiRealtor';
 import RentOrBuy from './components/RentOrBuy';
 import ResourcesSection from './components/ResourcesSection';
+import DealsMarket from './components/DealsMarket';
 import ConsultationSection from './components/ConsultationSection';
 
 export default function Home() {
@@ -112,6 +113,7 @@ export default function Home() {
       <div id="airealtor" className="w-full scroll-mt-20"><AiRealtor /></div>
       <RentOrBuy />
       <div id="resources" className="w-full scroll-mt-20"><ResourcesSection /></div>
+      <DealsMarket />
       <div id="consultation" className="w-full scroll-mt-20"><ConsultationSection /></div>
     </div>
   );
