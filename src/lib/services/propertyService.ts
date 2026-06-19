@@ -34,7 +34,6 @@ export async function fetchMLSProperties(odataQuery: string, resultCount: number
 /* Function to fetch base MLS Properties Base Data */
 async function fetchMLSPropertiesBase(webAPIAddress: string | undefined, odataFilter: string, top?: number): Promise<Property[]>{
     const url = `${webAPIAddress}/odata/Property?$filter=${odataFilter}`;
-    console.log("Fetching properties with URL:", url, "and filter:", odataFilter);
 
     const response = await fetch(url, {
         method: "GET",
@@ -177,9 +176,6 @@ async function fetchMLSPropertiesRoom(webAPIAddress: string | undefined, propert
 
     const responses = await Promise.all(chunks.map(async (chunk) => {
         const url = `${webAPIAddress}/odata/PropertyRooms?$filter=ListingKey in (${chunk.map(id => `'${id}'`).join(",")})`;
-        console.log("Fetching properties with URL:", url);
-
-
     
         const response = await fetch(url, {
             method: "GET",

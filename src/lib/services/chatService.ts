@@ -89,7 +89,7 @@ export async function handleChat(userQuery: string, context?: ChatContext): Prom
 
             // fix query criteria to use
             const improvedUserQuery = `
-            User Query: $ {userQuery}
+            User Query: ${userQuery}
 
             Active Filters to refine with: 
             ${buildFilterContext(mergedActiveFilters)}
@@ -106,6 +106,8 @@ export async function handleChat(userQuery: string, context?: ChatContext): Prom
                 // clear previous active filters and use only current ones
                 previousActiveFilters = undefined;
                 mergedActiveFilters = activeFilters;
+
+                console.log("Initial Run of property search");
 
             } else {
                 propertiesList = context.searchState.originalPropertyResults;
@@ -130,6 +132,7 @@ export async function handleChat(userQuery: string, context?: ChatContext): Prom
                     // filter off regular property list without ever using the refinement list (isn't one yet). // user query for the first refinement keeps track of all filters (since its base refinement)
                     const filteredPropertyIdsResponse = await refinePropertySearch(improvedUserQuery, stripMediaData(propertiesList)); 
                     refinedPropertiesList = propertiesList.filter(property => filteredPropertyIdsResponse.ids.includes(property.id));
+                    console.log("Initial refinement off propertylist initial");
                 }
                 // if there is refinement. return main list as the refined one and store the original and refined 
                 return { type: "property_search", properties: refinedPropertiesList, contextUpdate : {intent: intent, pendingClarification: undefined, searchState: {originalPropertyResults: propertiesList, refinedPropertyResults: refinedPropertiesList, activeSearchCriteria: mergedRequiredSearchCriteria, activeFilters: mergedActiveFilters}}};
