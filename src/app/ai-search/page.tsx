@@ -166,7 +166,8 @@ export default function AiSearchPage() {
           botText = "I refined your search results.";
         }
       } else if (data.type === "clarification") {
-        botText = Array.isArray(data.content) ? data.content.join('\n') : data.content;
+        const fields = data.missingFields?.join(', ') || 'details';
+        botText = `I need a little more information. Could you please specify the following: ${fields}?`;
       }
 
       const botMsg: Message = {
