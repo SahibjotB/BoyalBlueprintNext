@@ -515,7 +515,7 @@ export default function AiResultPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCity, setSelectedCity] = useState('All');
   const [selectedType, setSelectedType] = useState('All');
-  const [sortBy, setSortBy] = useState('price-asc');
+  const [sortBy, setSortBy] = useState('price-desc');
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
   const [properties, setProperties] = useState<Property[]>([]);
 
@@ -680,8 +680,8 @@ export default function AiResultPage() {
                 onChange={(e) => setSortBy(e.target.value)}
                 className="bg-neutral-50 border border-neutral-200 rounded-lg text-xs font-semibold py-1.5 pl-2 pr-8 text-neutral-700 focus:outline-none focus:border-[#e57c35] cursor-pointer"
               >
-                <option value="price-asc">Price: Low to High</option>
                 <option value="price-desc">Price: High to Low</option>
+                <option value="price-asc">Price: Low to High</option>
                 <option value="beds-desc">Bedrooms: Most to Least</option>
               </select>
             </div>

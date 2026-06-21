@@ -18,6 +18,60 @@ interface Message {
   hasDotPrefix?: boolean;
 }
 
+const loadingPhrases = [
+  "Searching through property database",
+  "Filtering thousands of active listings",
+  "Analyzing local market trends",
+  "Finding your perfect results"
+];
+
+function LoadingIndicator() {
+  const [phraseIndex, setPhraseIndex] = useState(0);
+  const [text, setText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    const currentPhrase = loadingPhrases[phraseIndex];
+
+    let timeout: ReturnType<typeof setTimeout>;
+
+    if (!isDeleting && text === currentPhrase) {
+      // Pause at the end of typing
+      timeout = setTimeout(() => setIsDeleting(true), 1500);
+    } else if (isDeleting && text === "") {
+      // Move to next phrase
+      setIsDeleting(false);
+      setPhraseIndex((prev) => (prev + 1) % loadingPhrases.length);
+    } else {
+      // Type or delete characters
+      const typingSpeed = isDeleting ? 30 : 60;
+      timeout = setTimeout(() => {
+        setText(currentPhrase.substring(0, text.length + (isDeleting ? -1 : 1)));
+      }, typingSpeed);
+    }
+
+    return () => clearTimeout(timeout);
+  }, [text, isDeleting, phraseIndex]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex items-center gap-3 mr-auto pl-4 py-2"
+    >
+      <div className="flex items-center gap-1.5 flex-shrink-0">
+        <span className="w-2.5 h-2.5 bg-[#E57C35]/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+        <span className="w-2.5 h-2.5 bg-[#E57C35]/80 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+        <span className="w-2.5 h-2.5 bg-[#E57C35] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+      </div>
+      <span className="text-[#E57C35] font-medium text-base md:text-lg">
+        {text}
+        <span className="animate-[pulse_1s_ease-in-out_infinite] ml-0.5">|</span>
+      </span>
+    </motion.div>
+  );
+}
+
 export default function AiSearchPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const chatScrollAreaRef = useRef<HTMLDivElement>(null);
@@ -355,13 +409,7 @@ export default function AiSearchPage() {
                 ))}
 
                 {/* Bot Typing Indicator */}
-                {isTyping && (
-                  <div className="flex items-center gap-1.5 mr-auto pl-4 py-2">
-                    <span className="w-2.5 h-2.5 bg-[#E57C35]/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
-                    <span className="w-2.5 h-2.5 bg-[#E57C35]/80 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
-                    <span className="w-2.5 h-2.5 bg-[#E57C35] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
-                  </div>
-                )}
+                {isTyping && <LoadingIndicator />}
               </div>
 
               {/* Suggestion pills if showing first search reply */}
