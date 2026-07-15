@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { User } from 'lucide-react';
 
 export default function Header() {
   const [hideHeader, setHideHeader] = useState(false);
@@ -37,23 +38,34 @@ export default function Header() {
           priority
         />
       </Link>
-      <nav className="hidden md:flex items-center gap-8 text-black font-semibold text-[15px]">
-        <Link href="/ai-search" className="hover:opacity-70 transition-opacity">
-          Ai Search
+      <div className="flex items-center gap-6 md:gap-8">
+        <nav className="hidden md:flex items-center gap-8 text-black font-semibold text-[15px]">
+          <Link href="/ai-search" className="hover:opacity-70 transition-opacity">
+            Ai Search
+          </Link>
+          <Link href="/calculator" className="hover:opacity-70 transition-opacity">
+            Calculator
+          </Link>
+          <Link href="/learn" className="hover:opacity-70 transition-opacity">
+            Learn
+          </Link>
+          <Link href="/deals" className="hover:opacity-70 transition-opacity">
+            Deals
+          </Link>
+          <Link href="/contact" className="hover:opacity-70 transition-opacity flex items-center gap-1">
+            Contact <span className="font-bold">&rarr;</span>
+          </Link>
+        </nav>
+
+        <Link
+          href="/login"
+          aria-label="Account Sign In or Sign Up"
+          className="flex items-center justify-center w-10 h-10 rounded-full border border-[#f97316]/40 bg-white/95 backdrop-blur-md text-[#f97316] shadow-sm hover:bg-[#f97316] hover:text-white hover:border-[#f97316] transition-all duration-300 group"
+          title="Sign in or create an account"
+        >
+          <User className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
         </Link>
-        <Link href="/calculator" className="hover:opacity-70 transition-opacity">
-          Calculator
-        </Link>
-        <Link href="/learn" className="hover:opacity-70 transition-opacity">
-          Learn
-        </Link>
-        <Link href="/deals" className="hover:opacity-70 transition-opacity">
-          Deals
-        </Link>
-        <Link href="/contact" className="hover:opacity-70 transition-opacity flex items-center gap-1">
-          Contact <span className="font-bold">&rarr;</span>
-        </Link>
-      </nav>
+      </div>
     </header>
   );
 }
