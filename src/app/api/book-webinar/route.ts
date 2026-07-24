@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import pool from '@/lib/db';
+import nodemailer from 'nodemailer';
 
 export async function POST(req: Request) {
   try {
@@ -128,8 +129,35 @@ export async function POST(req: Request) {
     let emailSent = false;
     let emailError: string | null = null;
 
-    // Check if Resend API Key is available
-    if (process.env.RESEND_API_KEY) {
+    // Check Option 1: Send via Nodemailer (if SMTP variables exist in .env)
+    if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+      try {
+        const transporter = nodemailer.createTransport({
+          host: process.env.SMTP_HOST,
+          port: parseInt(process.env.SMTP_PORT || '587', 10),
+          secure: process.env.SMTP_SECURE === 'true',
+          auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS,
+          },
+        });
+
+        await transporter.sendMail({
+          from: process.env.EMAIL_FROM || `"Boyal Blueprint" <${process.env.SMTP_USER}>`,
+          to: targetEmail,
+          subject: emailSubject,
+          html: emailHtml,
+        });
+
+        emailSent = true;
+        console.log('Successfully dispatched email via SMTP/Nodemailer');
+      } catch (smtpErr: any) {
+        emailError = smtpErr?.message || 'Failed to send email via SMTP';
+        console.error('SMTP Email Error:', smtpErr);
+      }
+    }
+    // Check Option 2: Send via Resend API Key (if RESEND_API_KEY exists in .env)
+    else if (process.env.RESEND_API_KEY) {
       try {
         const resendRes = await fetch('https://api.resend.com/emails', {
           method: 'POST',
@@ -158,7 +186,7 @@ export async function POST(req: Request) {
         console.error('Failed to send email via Resend API:', err);
       }
     } else {
-      console.log('Note: RESEND_API_KEY not found in environment. Booking logged to server console.');
+      console.log('Note: Neither SMTP nor RESEND_API_KEY environment variables are present in .env.');
     }
 
     return NextResponse.json({
