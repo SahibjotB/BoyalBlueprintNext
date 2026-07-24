@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
+import pool from '@/lib/db';
 
 export async function POST(req: Request) {
   try {
@@ -25,6 +26,29 @@ export async function POST(req: Request) {
     const userName = session.user.name || 'Valued Client';
     const userEmail = session.user.email || 'No email provided';
     const userPhone = (session.user as any).phone || customPhone || 'Not provided';
+
+    // 1. Save to Database
+    try {
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS webinar_bookings (
+          id SERIAL PRIMARY KEY,
+          user_email VARCHAR(255) NOT NULL,
+          user_name VARCHAR(255),
+          phone VARCHAR(255),
+          booking_date VARCHAR(255) NOT NULL,
+          booking_time VARCHAR(255) NOT NULL,
+          notes TEXT,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
+
+      await pool.query(
+        `INSERT INTO webinar_bookings (user_email, user_name, phone, booking_date, booking_time, notes) VALUES ($1, $2, $3, $4, $5, $6)`,
+        [userEmail, userName, userPhone, date, time, notes || null]
+      );
+    } catch (dbErr) {
+      console.error('Failed to save webinar booking to DB:', dbErr);
+    }
 
     const targetEmail = 'sahibjot.28@gmail.com';
 

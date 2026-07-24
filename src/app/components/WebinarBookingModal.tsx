@@ -23,6 +23,11 @@ const TIME_SLOTS = [
 export default function WebinarBookingModal({ isOpen, onClose }: WebinarBookingModalProps) {
   const { data: session, status } = useSession();
 
+  const user = (session as any)?.user;
+  const isAuthenticated = status === 'authenticated' || Boolean(user);
+  const isLoading = status === 'loading' && !user;
+  const isUnauthenticated = !isLoading && !isAuthenticated;
+
   const [date, setDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
   const [phone, setPhone] = useState('');
@@ -135,14 +140,14 @@ export default function WebinarBookingModal({ isOpen, onClose }: WebinarBookingM
 
         {/* Content Body */}
         <div className="p-6 sm:p-8 overflow-y-auto flex-1">
-          {status === 'loading' && (
+          {isLoading && (
             <div className="py-16 flex flex-col items-center justify-center text-center space-y-4">
               <Loader2 className="w-10 h-10 text-[#f97316] animate-spin" />
               <p className="text-sm text-zinc-600 font-medium">Checking your account details...</p>
             </div>
           )}
 
-          {status === 'unauthenticated' && (
+          {isUnauthenticated && (
             <div className="py-6 flex flex-col items-center text-center space-y-6">
               <div className="w-16 h-16 rounded-2xl bg-[#f97316]/10 text-[#f97316] flex items-center justify-center border border-[#f97316]/20 shadow-inner">
                 <LogIn className="w-8 h-8" />
@@ -174,7 +179,7 @@ export default function WebinarBookingModal({ isOpen, onClose }: WebinarBookingM
             </div>
           )}
 
-          {status === 'authenticated' && isSuccess && (
+          {isAuthenticated && isSuccess && (
             <div className="py-8 flex flex-col items-center text-center space-y-6">
               <div className="w-20 h-20 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-200 shadow-sm animate-bounce">
                 <CheckCircle2 className="w-10 h-10" />
@@ -199,7 +204,7 @@ export default function WebinarBookingModal({ isOpen, onClose }: WebinarBookingM
             </div>
           )}
 
-          {status === 'authenticated' && !isSuccess && (
+          {isAuthenticated && !isSuccess && (
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Account Summary Card */}
               <div className="rounded-2xl bg-zinc-50 border border-zinc-200/80 p-4 space-y-3">

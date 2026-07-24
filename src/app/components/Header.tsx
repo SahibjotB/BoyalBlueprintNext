@@ -3,15 +3,22 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { User } from 'lucide-react';
 
 export default function Header() {
+  const pathname = usePathname();
   const [hideHeader, setHideHeader] = useState(false);
 
   useEffect(() => {
+    setHideHeader(false);
+  }, [pathname]);
+
+  useEffect(() => {
     const handleScroll = () => {
-      // Check if the user has scrolled to the bottom of the page
-      const isBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 50;
+      // Only hide header at bottom if the page is scrollable beyond viewport
+      const isScrollable = document.documentElement.scrollHeight > window.innerHeight + 100;
+      const isBottom = isScrollable && (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 50);
       setHideHeader(isBottom);
     };
 
@@ -19,7 +26,7 @@ export default function Header() {
     handleScroll(); // Initial check
     
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [pathname]);
 
   return (
     <header 

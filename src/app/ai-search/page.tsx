@@ -112,6 +112,7 @@ export default function AiSearchPage() {
 
   // Manage html/body class overrides for layout, backgrounds and scrollbar hiding
   useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     document.documentElement.classList.add('ai-search-page');
     document.body.classList.add('ai-search-page');
 

@@ -10,11 +10,12 @@ export default function Footer() {
   const [showFooter, setShowFooter] = useState(false);
 
   useEffect(() => {
+    setShowFooter(false);
     if (isAiSearch) return;
 
     const handleScroll = () => {
-      // Check if the user has scrolled to the bottom of the page
-      const isBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 50;
+      const isScrollable = document.documentElement.scrollHeight > window.innerHeight + 100;
+      const isBottom = isScrollable && (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 50);
       setShowFooter(isBottom);
     };
 
@@ -22,7 +23,7 @@ export default function Footer() {
     handleScroll(); // Initial check
     
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [pathname, isAiSearch]);
 
   if (isAiSearch) return null;
 

@@ -2,6 +2,8 @@ import { auth, signOut } from "@/auth"
 import { redirect } from "next/navigation"
 import { LogOut, Home, Settings, Search, TrendingUp, ArrowRight, User } from "lucide-react"
 import Link from "next/link"
+import pool from "@/lib/db"
+import DashboardWebinarCard from "@/app/components/DashboardWebinarCard"
 
 export const metadata = {
   title: "Dashboard | Boyal Blueprint",
@@ -19,6 +21,38 @@ export default async function DashboardPage() {
   const firstName = session.user.name?.split(" ")[0] || "User"
   // @ts-ignore - Phone is injected via custom auth.ts jwt callback
   const phone = session.user.phone || "Not provided"
+
+  // Fetch webinar booking if user has booked
+  let booking: { booking_date: string; booking_time: string } | null = null;
+  if (session.user.email) {
+    try {
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS webinar_bookings (
+          id SERIAL PRIMARY KEY,
+          user_email VARCHAR(255) NOT NULL,
+          user_name VARCHAR(255),
+          phone VARCHAR(255),
+          booking_date VARCHAR(255) NOT NULL,
+          booking_time VARCHAR(255) NOT NULL,
+          notes TEXT,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
+
+      const result = await pool.query(
+        `SELECT booking_date, booking_time FROM webinar_bookings WHERE LOWER(user_email) = LOWER($1) ORDER BY created_at DESC LIMIT 1`,
+        [session.user.email]
+      );
+      if (result.rowCount && result.rowCount > 0) {
+        booking = {
+          booking_date: result.rows[0].booking_date,
+          booking_time: result.rows[0].booking_time,
+        };
+      }
+    } catch (err) {
+      console.error("Error fetching webinar booking for user:", err);
+    }
+  }
 
   return (
     <main className="flex min-h-screen flex-col bg-gradient-to-b from-[#FFFDFB] via-[#fef4ed] to-[#FCE4D6] pt-28 pb-20">
@@ -160,6 +194,9 @@ export default async function DashboardPage() {
                 Explore Deals &rarr;
               </div>
             </Link>
+
+            {/* Book Webinar Card */}
+            <DashboardWebinarCard initialBooking={booking} />
 
           </div>
 
