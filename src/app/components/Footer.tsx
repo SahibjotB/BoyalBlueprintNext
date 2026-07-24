@@ -38,7 +38,6 @@ export default function Footer() {
       >
         <nav className="flex flex-wrap items-center justify-center gap-6 md:gap-8 font-semibold text-[15px] mb-4 md:mb-0">
           <Link href="/ai-search" className="hover:opacity-80 transition-opacity">Ai Search</Link>
-          <Link href="/calculator" className="hover:opacity-80 transition-opacity">Calculator</Link>
           <Link href="/learn" className="hover:opacity-80 transition-opacity">Learn</Link>
           <Link href="/deals" className="hover:opacity-80 transition-opacity">Deals</Link>
           <Link href="/contact" className="hover:opacity-80 transition-opacity">Contact</Link>

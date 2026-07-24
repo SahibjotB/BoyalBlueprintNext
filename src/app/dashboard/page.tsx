@@ -1,6 +1,6 @@
 import { auth, signOut } from "@/auth"
 import { redirect } from "next/navigation"
-import { LogOut, Home, Settings, Search, Calculator, TrendingUp, ArrowRight, User } from "lucide-react"
+import { LogOut, Home, Settings, Search, TrendingUp, ArrowRight, User } from "lucide-react"
 import Link from "next/link"
 
 export const metadata = {
@@ -138,28 +138,6 @@ export default async function DashboardPage() {
                 <span className="bg-[#f97316]/10 text-[#f97316] text-xs font-bold px-2.5 py-1 rounded-full">0 Properties</span>
               </div>
             </div>
-
-            {/* Investment Calculator Card */}
-            <Link 
-              href="/calculator"
-              className="group flex flex-col justify-between rounded-[24px] border border-[#f97316]/15 bg-white p-6 md:p-7 shadow-[0_10px_30px_rgba(249,115,22,0.05)] hover:border-[#f97316] hover:shadow-[0_14px_40px_rgba(249,115,22,0.15)] transition-all duration-300 relative overflow-hidden"
-            >
-              <div>
-                <div className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-[#f97316]/10 text-[#f97316] group-hover:bg-[#f97316] group-hover:text-white group-hover:scale-105 transition-all duration-300 shadow-xs">
-                  <Calculator className="h-6 w-6" />
-                </div>
-                <h3 className="text-xl font-bold text-zinc-900 group-hover:text-[#f97316] transition-colors flex items-center justify-between">
-                  Investment Calculator
-                  <ArrowRight className="w-5 h-5 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 text-[#f97316]" />
-                </h3>
-                <p className="text-sm text-zinc-500 mt-2 leading-relaxed">
-                  Analyze ROI, mortgage payments, cap rates, and cash flow projections for potential real estate acquisitions.
-                </p>
-              </div>
-              <div className="mt-6 text-xs font-semibold text-[#f97316] flex items-center gap-1">
-                Open Calculator &rarr;
-              </div>
-            </Link>
 
             {/* Exclusive Deals Card */}
             <Link 

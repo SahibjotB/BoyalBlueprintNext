@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import Spline from '@splinetool/react-spline';
 import { Typewriter } from "react-simple-typewriter";
 
@@ -86,9 +87,12 @@ export default function AiRealtor() {
 
             {/* Button Container */}
             <div className="border-t border-gray-200 pt-8 mt-2">
-              <button className="w-full bg-[#f97316] hover:bg-[#ea580c] transition-colors text-white py-4 rounded-xl font-semibold text-lg duration-300">
+              <Link
+                href="/ai-search"
+                className="w-full bg-[#f97316] hover:bg-[#ea580c] transition-colors text-white py-4 rounded-xl font-semibold text-lg duration-300 flex items-center justify-center text-center"
+              >
                 Ask AI
-              </button>
+              </Link>
             </div>
           </div>
         </div>

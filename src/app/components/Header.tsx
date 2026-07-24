@@ -43,9 +43,6 @@ export default function Header() {
           <Link href="/ai-search" className="hover:opacity-70 transition-opacity">
             Ai Search
           </Link>
-          <Link href="/calculator" className="hover:opacity-70 transition-opacity">
-            Calculator
-          </Link>
           <Link href="/learn" className="hover:opacity-70 transition-opacity">
             Learn
           </Link>
