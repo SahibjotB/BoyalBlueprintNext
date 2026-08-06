@@ -7,11 +7,11 @@ export default function ConsultationSection() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-6 ">
 
           {/* Left Column */}
-          <div className="w-full flex items-end justify-center overflow-hidden min-h-[400px] lg:min-h-[800px]">
+          <div className="w-full flex items-end justify-center overflow-hidden min-h-[400px] lg:min-h-[500px]">
             <img
               src="/realtor-image2.png"
               alt="Kultej Boyal"
-              className="w-full h-auto object-contain object-bottom -mb-2"
+              className="w-full h-auto object-contain object-bottom -mb-4"
             />
           </div>
 
