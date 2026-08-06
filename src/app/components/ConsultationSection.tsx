@@ -1,6 +1,11 @@
-import React from 'react';
+'use client';
+
+import React, { useState } from 'react';
+import WebinarBookingModal from './WebinarBookingModal';
 
 export default function ConsultationSection() {
+  const [isWebinarModalOpen, setIsWebinarModalOpen] = useState(false);
+
   return (
     <section className="relative w-full bg-white pb-20 pt-10 overflow-hidden ">
       <div className="max-w-7xl mx-auto px-4 md:px-8 border border-[#f97316] pb-0">
@@ -27,7 +32,10 @@ export default function ConsultationSection() {
                 <h2 className="text-[32px] md:text-[38px] lg:text-[42px] font-sans font-semibold text-black leading-[1.15] tracking-tight mb-8">
                   Free consultation with <br className="hidden sm:block" /> a Real Estate expert
                 </h2>
-                <button className="bg-[#f97316] hover:bg-[#ea580c] transition-colors text-white px-8 py-3 rounded-xl font-semibold text-[16px]">
+                <button
+                  onClick={() => setIsWebinarModalOpen(true)}
+                  className="bg-[#f97316] hover:bg-[#ea580c] transition-colors text-white px-8 py-3 rounded-xl font-semibold text-[16px] cursor-pointer"
+                >
                   Contact an Expert
                 </button>
               </div>
@@ -41,6 +49,13 @@ export default function ConsultationSection() {
 
         </div>
       </div>
+
+      {/* Free Webinar / Consultation Booking Modal */}
+      <WebinarBookingModal
+        isOpen={isWebinarModalOpen}
+        onClose={() => setIsWebinarModalOpen(false)}
+      />
     </section>
   );
 }
+
