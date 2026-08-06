@@ -19,6 +19,8 @@ export async function extractPropertyValues(userQuery:string): Promise<ExtractRe
         1) MLS Filters (used for database search)
         - ONLY use MLS attributes from the provided list: ${relevantAttributesContext}
         - THIS Currently Only INCLUDES: ListPrice, City. EVERYTHING ELSE is an ACTIVE FILTER 
+          - City can only be 1 word: if it includes directions like {Brampton}{East}. Only use the root city name like {Brampton}.
+          - There are multiple cities that are likely to come up as reference: {Toronto, Brampton, Markham, Ajax, Pickering, Hamilton, Oshawa, Milton, Oakville, Caledon, Missisauga, Richmond Hill, Vaughan}
         - Convert natural language into structured filters
         - Boolean fields is true/false
         - Numbers must be numbers (convert common formats like "500k" to 500000)
@@ -117,7 +119,7 @@ export async function extractPropertyValues(userQuery:string): Promise<ExtractRe
     }
     
     // call llm service with system prompt and user query, specify structured output with schema for expected return format
-    const LLMResponse = await generateOutput<ExtractLLMResult>({ systemPrompt, userPrompt: userQuery, schema: extractResultSchema });
+    const LLMResponse = await generateOutput<ExtractLLMResult>({ systemPrompt, userPrompt: userQuery, schema: extractResultSchema, caller: "extractService" });
     const normalizedFilters = normalizeFilters(LLMResponse.filters);
     
     const extractResponse = {
