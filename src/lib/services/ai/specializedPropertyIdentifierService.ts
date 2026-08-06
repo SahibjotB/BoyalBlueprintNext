@@ -30,6 +30,6 @@ export async function identifySpecializedProperty (userQuery: string, propertyAd
     }
     
     // call llm service with system prompt and user query, specify structured output with schema for expected return format
-    const response = await generateOutput<PropertyIdentifiedResult>({ systemPrompt, userPrompt: userQuery, schema: identifiedSpecializedPropertiesSchema });
+    const response = await generateOutput<PropertyIdentifiedResult>({ systemPrompt, userPrompt: userQuery, schema: identifiedSpecializedPropertiesSchema, caller: "specializedPropertyIdentifierService" });
     return response;
 }

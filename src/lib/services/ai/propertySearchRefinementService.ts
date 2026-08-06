@@ -26,9 +26,6 @@ export async function refinePropertySearch (userQuery: string, propertyList: Pro
     - Do NOT include explanations or extra text
 
     You must evaluate properties based on any of the property attributes that are relevant to the user query, such as location, price, number of bedrooms, etc. The user query may include various types of refinement criteria, such as "Show me properties in downtown under $500k with at least 2 bedrooms". You need to parse the user query, identify the filtering criteria, and apply those criteria to the list of properties provided in the context to determine which properties match the user's refinement request.
-
-    PROPERTIES (SOURCE DATA):
-    ${JSON.stringify(propertyList)}
     ` 
 
     // Define the expected schema for the LLM response to ensure we get structured data back that we can work with
@@ -52,6 +49,8 @@ export async function refinePropertySearch (userQuery: string, propertyList: Pro
     }
     
     // call llm service with system prompt and user query, specify structured output with schema for expected return format
-    const response = await generateOutput<PropertyRefinementResult>({ systemPrompt, userPrompt: userQuery, schema: refinedPropertySchema });
+    const userPrompt = `User refinement request: ${userQuery} PROPERTIES: ${JSON.stringify(propertyList)}`;
+
+    const response = await generateOutput<PropertyRefinementResult>({ systemPrompt, userPrompt: userPrompt, schema: refinedPropertySchema, caller: "propertyRefinementService" });
     return response;
 }

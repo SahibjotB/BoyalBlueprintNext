@@ -34,7 +34,7 @@ export async function testIntent(userQuery: string, context?: ChatContext): Prom
 export async function handleChat(userQuery: string, context?: ChatContext): Promise<ChatResult> {
 
     // 1) Classify intent of message with intent service (or use passed intent if available from front end context)
-    const intent = context?.intent ?? await identifyIntent(userQuery, context?.firstTimeRunFlag);
+    const intent = context?.intent ?? await identifyIntent(userQuery);
 
     // 2) Act upon the identified intent with different behaviors for chat returns
     switch (intent.intent) {
@@ -112,6 +112,8 @@ export async function handleChat(userQuery: string, context?: ChatContext): Prom
             } else {
                 propertiesList = context.searchState.originalPropertyResults;
             }
+
+            console.log("THE length of list is: ", propertiesList.length);
 
             // if activeFilters have values we have to refine this further with these filters so just send propertyList and search query to the refinement function
             if (activeFilters.length > 0) {
