@@ -9,8 +9,8 @@ export default function ConsultationSection() {
           {/* Left Column */}
           <div className="w-full flex items-end justify-center overflow-hidden min-h-[400px] lg:min-h-[500px]">
             <img
-              src="/realtor-image.png"
-              alt="Kevin Boyal"
+              src="/realtor-image2.png"
+              alt="Kultej Boyal"
               className="w-full h-auto object-contain object-bottom -mb-1"
             />
           </div>
@@ -33,8 +33,8 @@ export default function ConsultationSection() {
               </div>
 
               <div className="mt-8 flex flex-col items-right text-right">
-                <h3 className="text-xl lg:text-[22px] font-semibold text-[#f97316] font-sans tracking-tight mb-1">Kevin Boyal</h3>
-                <p className="text-[16px] lg:text-[18px] text-black font-serif">Founder, Boyal Realty Group</p>
+                <h3 className="text-xl lg:text-[22px] font-semibold text-[#f97316] font-sans tracking-tight mb-1">Kultej Boyal</h3>
+                <p className="text-[16px] lg:text-[18px] text-black font-serif">Co-Founder, Boyal Realty Group</p>
               </div>
             </div>
           </div>
