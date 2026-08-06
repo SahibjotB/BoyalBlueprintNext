@@ -3,7 +3,7 @@ import React from 'react';
 export default function ConsultationSection() {
   return (
     <section className="relative w-full bg-white pb-20 pt-10 overflow-hidden ">
-      <div className="max-w-7xl mx-auto px-4 md:px-8 border border-[#f97316] pb-4">
+      <div className="max-w-7xl mx-auto px-4 md:px-8 border border-[#f97316] pb-0">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-6 ">
 
           {/* Left Column */}
@@ -11,7 +11,7 @@ export default function ConsultationSection() {
             <img
               src="/realtor-image2.png"
               alt="Kultej Boyal"
-              className="w-full h-auto object-contain object-bottom -mb-4"
+              className="w-full h-full object-cover object-bottom"
             />
           </div>
 
@@ -32,7 +32,7 @@ export default function ConsultationSection() {
                 </button>
               </div>
 
-              <div className="mt-8 flex flex-col items-right text-right">
+              <div className="mt-0 flex flex-col items-right text-right mb-4">
                 <h3 className="text-xl lg:text-[22px] font-semibold text-[#f97316] font-sans tracking-tight mb-1">Kultej Boyal</h3>
                 <p className="text-[16px] lg:text-[18px] text-black font-serif">Co-Founder, Boyal Realty Group</p>
               </div>
