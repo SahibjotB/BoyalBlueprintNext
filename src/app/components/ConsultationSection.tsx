@@ -12,18 +12,18 @@ export default function ConsultationSection() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-6 ">
 
           {/* Left Column */}
-          <div className="w-full flex items-end justify-center overflow-hidden min-h-[400px] lg:min-h-[500px]">
+          <div className="w-full flex items-end justify-center overflow-hidden min-h-[400px] lg:min-h-[500px] min-w-[700px]">
             <img
               src="/realtor-image2.png"
               alt="Kultej Boyal"
-              className="w-full h-full object-cover object-bottom"
+              className="w-full h-full object-contain object-bottom"
             />
           </div>
 
           {/* Right Column */}
           <div className="w-full flex items-start justify-center pt-0 md:pt-0">
             <div className="w-full max-w-[700px] flex flex-col">
-              <div className="bg-white w-full aspect-square flex flex-col items-center justify-center text-center px-8 md:px-12 lg:px-16 pb-32">
+              <div className="bg-white w-full aspect-square flex flex-col items-center justify-center text-center px-8 md:px-12 lg:px-16 pb-16">
                 <img
                   src="/certified.png"
                   alt="Certified"
