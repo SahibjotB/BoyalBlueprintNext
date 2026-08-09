@@ -5,10 +5,12 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { User } from 'lucide-react';
+import { useWebinarModal } from './WebinarModalContext';
 
 export default function Header() {
   const pathname = usePathname();
   const [hideHeader, setHideHeader] = useState(false);
+  const { openWebinarModal } = useWebinarModal();
 
   useEffect(() => {
     setHideHeader(false);
@@ -56,9 +58,13 @@ export default function Header() {
           <Link href="/deals" className="hover:opacity-70 transition-opacity">
             Deals
           </Link>
-          <Link href="/contact" className="hover:opacity-70 transition-opacity flex items-center gap-1">
+          <button
+            type="button"
+            onClick={openWebinarModal}
+            className="hover:opacity-70 transition-opacity flex items-center gap-1 cursor-pointer"
+          >
             Contact <span className="font-bold">&rarr;</span>
-          </Link>
+          </button>
         </nav>
 
         <Link

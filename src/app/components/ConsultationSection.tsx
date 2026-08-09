@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
-import WebinarBookingModal from './WebinarBookingModal';
+import React from 'react';
+import { useWebinarModal } from './WebinarModalContext';
 
 export default function ConsultationSection() {
-  const [isWebinarModalOpen, setIsWebinarModalOpen] = useState(false);
+  const { openWebinarModal } = useWebinarModal();
 
   return (
     <section className="relative w-full bg-white pb-20 pt-10 overflow-hidden ">
@@ -33,7 +33,7 @@ export default function ConsultationSection() {
                   Free consultation with <br className="hidden sm:block" /> a Real Estate expert
                 </h2>
                 <button
-                  onClick={() => setIsWebinarModalOpen(true)}
+                  onClick={openWebinarModal}
                   className="bg-[#f97316] hover:bg-[#ea580c] transition-colors text-white px-8 py-3 rounded-xl font-semibold text-[16px] cursor-pointer"
                 >
                   Contact an Expert
@@ -49,12 +49,6 @@ export default function ConsultationSection() {
 
         </div>
       </div>
-
-      {/* Free Webinar / Consultation Booking Modal */}
-      <WebinarBookingModal
-        isOpen={isWebinarModalOpen}
-        onClose={() => setIsWebinarModalOpen(false)}
-      />
     </section>
   );
 }

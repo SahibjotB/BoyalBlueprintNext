@@ -7,6 +7,8 @@ import { SessionProvider } from "./components/SessionProvider";
 import { auth } from "@/auth";
 import "./globals.css";
 
+import { WebinarModalProvider } from "./components/WebinarModalContext";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -41,10 +43,12 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-white m-0 p-0 w-full overflow-x-hidden">
         <SessionProvider session={session}>
-          <ScrollToTop />
-          <Header />
-          {children}
-          <Footer />
+          <WebinarModalProvider>
+            <ScrollToTop />
+            <Header />
+            {children}
+            <Footer />
+          </WebinarModalProvider>
         </SessionProvider>
       </body>
     </html>

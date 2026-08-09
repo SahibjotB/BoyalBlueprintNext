@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import WebinarBookingModal from './WebinarBookingModal';
+import { useWebinarModal } from './WebinarModalContext';
 
 export default function ResourcesSection() {
-  const [isWebinarModalOpen, setIsWebinarModalOpen] = useState(false);
+  const { openWebinarModal } = useWebinarModal();
 
   return (
     <section className="relative w-full bg-white pb-12 lg:pb-24 overflow-hidden pt-40">
@@ -33,7 +33,7 @@ export default function ResourcesSection() {
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
               <button
-                onClick={() => setIsWebinarModalOpen(true)}
+                onClick={openWebinarModal}
                 className="bg-[#f97316] hover:bg-[#ea580c] transition-colors text-white px-8 py-3 md:py-4 rounded-xl font-semibold text-[15px] lg:text-base tracking-wide h-fit shadow-md hover:shadow-lg cursor-pointer"
               >
                 Free Webinar
@@ -48,12 +48,6 @@ export default function ResourcesSection() {
           </div>
         </div>
       </div>
-
-      {/* Free Webinar Booking Modal */}
-      <WebinarBookingModal
-        isOpen={isWebinarModalOpen}
-        onClose={() => setIsWebinarModalOpen(false)}
-      />
     </section>
   );
 }

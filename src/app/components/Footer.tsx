@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import { useWebinarModal } from "./WebinarModalContext";
 
 export default function Footer() {
   const pathname = usePathname();
   const isAiSearch = pathname === '/ai-search';
   const [showFooter, setShowFooter] = useState(false);
+  const { openWebinarModal } = useWebinarModal();
 
   useEffect(() => {
     setShowFooter(false);
@@ -41,7 +43,13 @@ export default function Footer() {
           <Link href="/ai-search" className="hover:opacity-80 transition-opacity">Ai Search</Link>
           <Link href="/learn" className="hover:opacity-80 transition-opacity">Learn</Link>
           <Link href="/deals" className="hover:opacity-80 transition-opacity">Deals</Link>
-          <Link href="/contact" className="hover:opacity-80 transition-opacity">Contact</Link>
+          <button
+            type="button"
+            onClick={openWebinarModal}
+            className="hover:opacity-80 transition-opacity cursor-pointer"
+          >
+            Contact
+          </button>
         </nav>
         <div className="text-[15px] text-white/90 font-medium text-center md:text-right">
           &copy; 2025 &middot; All rights reserved
