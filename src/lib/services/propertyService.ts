@@ -49,7 +49,16 @@ export async function fetchMLSProperties(odataQuery: string, nextLink?: string, 
 
 /* Function to fetch base MLS Properties Base Data */
 async function fetchMLSPropertiesBase(webAPIAddress: string | undefined, odataFilter: string, nextLink?: string, top: number = DEFAULT_PAGE_SIZE): Promise<MLSPagedResult> {
-    const url = `${webAPIAddress}/odata/Property?$filter=${odataFilter}`;
+    //let url = `${webAPIAddress}/odata/Property?$filter=${odataFilter}`;
+    
+    let url: string;
+
+    // figure out which url to set based on the MLS API response nextLink or the initial call with odataFilter
+    if (nextLink) {
+        url = nextLink;
+    } else {
+        url = `${webAPIAddress}/odata/Property?$filter=${odataFilter}&$top=${top}&$count=true`;
+    }
 
     const response = await fetch(url, {
         method: "GET",
@@ -70,7 +79,11 @@ async function fetchMLSPropertiesBase(webAPIAddress: string | undefined, odataFi
     // get value which is an array of properties
     const propertiesList = jsonData.value;
 
-    return propertiesList.map((p: any): Property => ({
+    // get OData values for pagination
+    const totalCount = typeof jsonData["@odata.count"] === "number" ? jsonData["@odata.count"] : propertiesList.length;
+    const returnedNextLink = jsonData["@odata.nextLink"] ?? null;   
+
+    const properties = propertiesList.map((p: any): Property => ({
         id: p.ListingKey,
         address: {
             unparsedAddress: p.UnparsedAddress,
@@ -184,6 +197,11 @@ async function fetchMLSPropertiesBase(webAPIAddress: string | undefined, odataFi
         mediaImages: []
     }));
 
+    return {
+        properties: properties,
+        nextLink: returnedNextLink,
+        totalCount: totalCount
+    };
 }
 /* Function to fetch MLS Properties Room Data */
 async function fetchMLSPropertiesRoom(webAPIAddress: string | undefined, propertyIDs: string[]): Promise<Map<string, Room[]>> {
