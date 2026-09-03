@@ -12,7 +12,7 @@ export type MLSPagedResult = {
 }
 
 /* Function that fetches properties with associated rooms and media calls made sequentially */
-export async function fetchMLSProperties(odataQuery: string, nextLink?: string, pageSize: number = DEFAULT_PAGE_SIZE): Promise<MLSPagedResult> {
+export async function fetchMLSProperties(odataQuery?: string, nextLink?: string, pageSize: number = DEFAULT_PAGE_SIZE): Promise<MLSPagedResult> {
     const webURL = process.env.MLS_API_ENDPOINT;
 
     // get properties base data
@@ -48,7 +48,7 @@ export async function fetchMLSProperties(odataQuery: string, nextLink?: string, 
 /* Potentially strip down data */
 
 /* Function to fetch base MLS Properties Base Data */
-async function fetchMLSPropertiesBase(webAPIAddress: string | undefined, odataFilter: string, nextLink?: string, top: number = DEFAULT_PAGE_SIZE): Promise<MLSPagedResult> {
+async function fetchMLSPropertiesBase(webAPIAddress: string | undefined, odataFilter?: string, nextLink?: string, top: number = DEFAULT_PAGE_SIZE): Promise<MLSPagedResult> {
     //let url = `${webAPIAddress}/odata/Property?$filter=${odataFilter}`;
     
     let url: string;
@@ -349,7 +349,7 @@ async function fetchMLSPropertiesMedia(webAPIAddress: string | undefined, proper
 // Property with ID -> Same functions as above except with IDs 
 export async function getPropertyByID(listingID: string): Promise<Property> {
     const odataQuery = `ListingKey eq '${listingID}'`;
-    const property = await fetchMLSProperties(odataQuery, 1);
+    const property = (await fetchMLSProperties(odataQuery,undefined,1)).properties;
     return property[0];
 }
  
