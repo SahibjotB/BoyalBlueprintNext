@@ -1,6 +1,6 @@
 import { Filter } from "lucide-react";
 import { ChatResult, Intent, IntentResult, ChatContext, ActiveSearchCriteria, FilterItem, PropertyOperator, ActiveFilter } from "../types/chat";
-import { mapPropertyAddressData, Property, stripMediaData } from "../types/property";
+import { mapPropertyAddressData, Property, stripExtraData, stripMediaData } from "../types/property";
 import { buildODataQuery } from "../utils/buildFilter";
 import { extractPropertyValues } from "./ai/extractService";
 import { identifyIntent } from "./ai/intentService";
@@ -17,6 +17,7 @@ import { fetchMLSProperties } from "./propertyService";
         - Handle any text flow logic for the chat interactions in one place to keep the front end simple (keeps all logic in one place and calls the right needed services)
 
 */
+
 
 // figure out pre-context
 // have an if- logged in flag (display info at the top)
@@ -78,38 +79,71 @@ export async function handleChat(userQuery: string, context?: ChatContext): Prom
             // Check against the missing fields that are already satisifed by the past context... Make sure there isn't still fields missing that are required (if length > 0)
             if (missingFields.length > 0) {
                 // return with clarification type and content to show to the user and also update the context with what fields are missing so that when the user responds with the clarification we have that context available to know what they are clarifying about 
-                return { type: "clarification", missingFields: propertyFilterExtractionResult.missingFields, contextUpdate: { intent: intent, pendingClarification: undefined, searchState: { ...context?.searchState, activeSearchCriteria: mergedRequiredSearchCriteria, activeFilters: mergedActiveFilters } } };
-            }
-
+                return { type: "clarification", missingFields, contextUpdate: { intent: intent, pendingClarification: undefined, searchState: { ...context?.searchState, activeSearchCriteria: mergedRequiredSearchCriteria, activeFilters: mergedActiveFilters } } };
+            }   
+            
             /* BASE MLS Filtering logic: get values here and then build OData query string to send to the property API to get results back based on those filters. */
             const MLSBaseFilter = buildMLSBaseFilters(mergedRequiredSearchCriteria);
             const odataQueryString = await buildODataQuery(MLSBaseFilter);
 
             console.log("Generated OData query string:", odataQueryString);
 
-            // fix query criteria to use
-            const improvedUserQuery = `
-            User Query: $ {userQuery}
 
-            Active Filters to refine with: 
-            ${buildFilterContext(mergedActiveFilters)}
-            `;
+            /* Search Variable Conidition Checks */
 
-            /* MLS Property search. Update originalPropertyList */
+            const searchCriteraChanged = hasSearchCriteriaChanged(context?.searchState?.activeSearchCriteria, MLSBaseFilter);
+            const hasNoExistingProperties = !context?.searchState?.originalPropertyResults || context.searchState.originalPropertyResults.length === 0;
+            const isNewMLSQuery = searchCriteraChanged || hasNoExistingProperties;
+
+            /* Existing Property List from Context */
+
             let refinedPropertyResults = context?.searchState?.refinedPropertyResults;
+            let totalPropertyCount = context?.searchState?.totalResults ?? 0;
+            let loadedPropertyCount = context?.searchState?.loadedCount ?? 0;           
+            let nextLink = context?.searchState?.nextLink ?? null;            
+
+            /* NEW MLS SEARCH */
 
             // Either search context has changed or there is no existing property list so query MLS for new list or else just use the one from context given no change
-            if (hasSearchCriteriaChanged(context?.searchState?.activeSearchCriteria, MLSBaseFilter) || context?.searchState?.originalPropertyResults == null || context?.searchState?.originalPropertyResults.length == 0) {
-                propertiesList = await fetchMLSProperties(odataQueryString, 5);
+            if(isNewMLSQuery) {
+                
+                // get all MLS information
+                const mlsResult = await fetchMLSProperties(odataQueryString);
+                
+                // get 1st page (100 properties)
+                propertiesList = mlsResult.properties;
+
+                totalPropertyCount = mlsResult.totalCount;
+                loadedPropertyCount = propertiesList.length;
+                nextLink = mlsResult.nextLink;
+
+                // clear previous refinement
                 refinedPropertyResults = undefined;
 
                 // clear previous active filters and use only current ones
                 previousActiveFilters = undefined;
                 mergedActiveFilters = activeFilters;
 
+                console.log("Initial Run of property search");
+
             } else {
-                propertiesList = context.searchState.originalPropertyResults;
+                // no call needed. Use the one from context memory 
+                propertiesList = context!.searchState!.originalPropertyResults!;
+                totalPropertyCount = context!.searchState!.totalResults! ?? propertiesList.length;
+                loadedPropertyCount = context!.searchState!.loadedCount! ?? propertiesList.length;
+                nextLink = context!.searchState!.nextLink ?? null;
             }
+
+
+            /* Build Improved refinement Query */
+
+            // fix query criteria to use
+            const improvedUserQuery = `
+                User Query: ${userQuery}
+
+                Active Filters to refine with: 
+                ${buildFilterContext(mergedActiveFilters)}
+                `;
 
             // if activeFilters have values we have to refine this further with these filters so just send propertyList and search query to the refinement function
             if (activeFilters.length > 0) {
@@ -117,26 +151,29 @@ export async function handleChat(userQuery: string, context?: ChatContext): Prom
                 // if there is something to refine.. if there is an existing list, refine that list first.. if there isn't a list or its the first search with extra criteria refine the original
                 if (refinedPropertyResults != null && refinedPropertyResults.length > 0) {
                     // refining off the current user query since we already accounted for the other filters in refinement
-                    const filteredPropertyIdsResponse = await refinePropertySearch(userQuery, stripMediaData(refinedPropertyResults));
-                    refinedPropertiesList = refinedPropertyResults.filter(property => filteredPropertyIdsResponse.ids.includes(property.id));
+                    const filteredPropertyIdsResponse = await refinePropertySearch(userQuery, stripExtraData(refinedPropertyResults)); 
+                    refinedPropertiesList = refinedPropertyResults.filter(property => filteredPropertyIdsResponse.ids.includes(property.id)); 
 
                     // if refined gives 0... refine the original property list
-                    if (refinedPropertiesList.length == 0 && context?.searchState?.originalPropertyResults != null) {
+                    if (refinedPropertiesList.length == 0 && propertiesList.length > 0) {
                         // run the refinement again with the original results to narrow that down
-                        const filteredPropertyIdsResponse = await refinePropertySearch(userQuery, stripMediaData(propertiesList));
+                        const filteredPropertyIdsResponse = await refinePropertySearch(userQuery, stripExtraData(propertiesList)); 
                         refinedPropertiesList = propertiesList.filter(property => filteredPropertyIdsResponse.ids.includes(property.id));
                     }
                 } else {
                     // filter off regular property list without ever using the refinement list (isn't one yet). // user query for the first refinement keeps track of all filters (since its base refinement)
-                    const filteredPropertyIdsResponse = await refinePropertySearch(improvedUserQuery, stripMediaData(propertiesList));
+                    const filteredPropertyIdsResponse = await refinePropertySearch(improvedUserQuery, stripExtraData(propertiesList.slice(0, 50))); 
                     refinedPropertiesList = propertiesList.filter(property => filteredPropertyIdsResponse.ids.includes(property.id));
-                }
+                    console.log("Initial refinement off propertylist initial");
+                  }
                 // if there is refinement. return main list as the refined one and store the original and refined 
-                return { type: "property_search", properties: refinedPropertiesList, contextUpdate: { intent: intent, pendingClarification: undefined, searchState: { originalPropertyResults: propertiesList, refinedPropertyResults: refinedPropertiesList, activeSearchCriteria: mergedRequiredSearchCriteria, activeFilters: mergedActiveFilters } } };
+                return { type: "property_search", properties: refinedPropertiesList, contextUpdate : {intent: intent, pendingClarification: undefined, searchState: { originalPropertyResults: propertiesList, refinedPropertyResults: refinedPropertiesList, activeSearchCriteria: mergedRequiredSearchCriteria, activeFilters: mergedActiveFilters, totalResults: totalPropertyCount, loadedCount: loadedPropertyCount, nextLink: nextLink }}};
             }
 
             // Return array of Property objects (nothing refined)
-            return { type: "property_search", properties: propertiesList, contextUpdate: { intent: intent, pendingClarification: undefined, searchState: { originalPropertyResults: propertiesList, activeSearchCriteria: mergedRequiredSearchCriteria, activeFilters: mergedActiveFilters } } };
+            console.log("Search context state: " + JSON.stringify({ activeSearchCriteria: mergedRequiredSearchCriteria, activeFilters: mergedActiveFilters, totalResults: totalPropertyCount, loadedCount: loadedPropertyCount, nextLink: nextLink }));
+
+            return { type: "property_search", properties: propertiesList, contextUpdate : {intent: intent, pendingClarification: undefined, searchState: { originalPropertyResults: propertiesList, activeSearchCriteria: mergedRequiredSearchCriteria, activeFilters: mergedActiveFilters, totalResults: totalPropertyCount, loadedCount: loadedPropertyCount, nextLink: nextLink }}};
 
         case "real_estate":
             const realEstateResponse = await answerRealEstateQuestions(userQuery)
@@ -207,6 +244,50 @@ export async function handleChat(userQuery: string, context?: ChatContext): Prom
 
         case "other":
             return { type: "text", content: `this is a response for other intent with confidence: ${intent.confidence}`, contextUpdate: { pendingClarification: undefined } };
+        
+        case "next_page": {
+            if (!context?.searchState?.nextLink) {
+                return { type: "text", content: "No more pages available.", contextUpdate: { intent } };
+            }
+            const mlsResult = await fetchMLSProperties(undefined, context.searchState.nextLink);
+            const newlyLoadedProperties = mlsResult.properties;
+
+            const existingProperties = context.searchState.originalPropertyResults ?? [];
+
+            const combinedProperties = [
+                ...existingProperties,
+                ...newlyLoadedProperties
+            ]
+
+            // remove duplicates
+            const uniqueProperties = Array.from(
+                new Map(combinedProperties.map(property => [property.id, property])).values()
+            );
+
+            const loadedPropertyCount = uniqueProperties.length;
+            const totalPropertyCount = mlsResult.totalCount;
+            const nextLink = mlsResult.nextLink;
+
+            console.log(`Loaded ${loadedPropertyCount} properties out of ${totalPropertyCount}. Next link: ${nextLink}`);
+
+            return {
+                type: "property_search",
+                properties: newlyLoadedProperties,
+                contextUpdate: {
+                    intent,
+                    pendingClarification: undefined,
+                    searchState: {
+                        ...context.searchState,
+                        originalPropertyResults: uniqueProperties,
+
+                        refinedPropertyResults: context.searchState.refinedPropertyResults,
+                        totalResults: totalPropertyCount,
+                        loadedCount: loadedPropertyCount,
+                        nextLink
+                    }
+                }
+            };
+        };
 
         default:
             return { type: "text", content: `could not classify intent with confidence: ${intent.confidence}`, contextUpdate: { pendingClarification: undefined } };

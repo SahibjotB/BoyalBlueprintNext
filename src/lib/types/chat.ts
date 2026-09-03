@@ -111,6 +111,15 @@ export type SearchState = {
     // Human-readable refinement history
     activeFilters?: ActiveFilter[];
 
+
+    totalResults?: number;
+    currentPage?: number;
+    pageSize?: number;
+    loadedCount?: number;
+    nextLink?: string | null | undefined;
+
+
+
 }
 
 export type ChatContext = {

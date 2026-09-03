@@ -27,6 +27,6 @@ export async function answerSpecializedPropertyQuestions (userQuery: string, pro
     }
     
     // call llm service with system prompt and user query, specify structured output with schema for expected return format
-    const response = await generateOutput<BaseResult>({ systemPrompt, userPrompt: userQuery, schema: baseResponseSchema });
+    const response = await generateOutput<BaseResult>({ systemPrompt, userPrompt: userQuery, schema: baseResponseSchema, caller: "specializedPropertyQuestions" });
     return response;
 }

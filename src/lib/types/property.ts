@@ -144,3 +144,10 @@ export function mapPropertyAddressData(properties: Property[]): PropertyAddress[
         address: property.address.unparsedAddress
     }));
 }
+
+export type PropertyWithoutExtraData = Omit<Property, "mediaImages" | "roomList" | "washroomDetails">;
+
+// transformer function
+export function stripExtraData(properties: Property[]): PropertyWithoutExtraData[] {
+    return properties.map(({ mediaImages, roomList, ...rest }) => rest);
+}

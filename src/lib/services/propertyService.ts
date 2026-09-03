@@ -1,13 +1,23 @@
+import page from "@/app/learn/page";
 import { Property, Room, Washroom } from "../types/property";
 import { chunkArray } from "../utils/arrayUtils";
 
+
+const DEFAULT_PAGE_SIZE = 100;
+
+export type MLSPagedResult = {
+    properties: Property[];
+    nextLink: string | null;
+    totalCount: number;
+}
+
 /* Function that fetches properties with associated rooms and media calls made sequentially */
-export async function fetchMLSProperties(odataQuery: string, resultCount: number): Promise<Property[]> {
+export async function fetchMLSProperties(odataQuery: string, nextLink?: string, pageSize: number = DEFAULT_PAGE_SIZE): Promise<MLSPagedResult> {
     const webURL = process.env.MLS_API_ENDPOINT;
 
     // get properties base data
-    const rawProperties = await fetchMLSPropertiesBase(webURL, odataQuery);
-
+    const rawPropertiesPage = await fetchMLSPropertiesBase(webURL, odataQuery, nextLink, pageSize);
+    const rawProperties = rawPropertiesPage.properties;
     // extract property IDs for room and media fetching
     const propertyIDs = rawProperties.map(p => p.id);
 
@@ -28,13 +38,27 @@ export async function fetchMLSProperties(odataQuery: string, resultCount: number
     }
 
     // TODO: Figure out array indices syntax 
-    return rawProperties;
+    return {
+        properties: rawProperties,
+        nextLink: rawPropertiesPage.nextLink,
+        totalCount: rawPropertiesPage.totalCount
+    };
 }
 
+/* Potentially strip down data */
+
 /* Function to fetch base MLS Properties Base Data */
-async function fetchMLSPropertiesBase(webAPIAddress: string | undefined, odataFilter: string, top?: number): Promise<Property[]>{
-    const url = `${webAPIAddress}/odata/Property?$filter=${odataFilter}`;
-    console.log("Fetching properties with URL:", url, "and filter:", odataFilter);
+async function fetchMLSPropertiesBase(webAPIAddress: string | undefined, odataFilter: string, nextLink?: string, top: number = DEFAULT_PAGE_SIZE): Promise<MLSPagedResult> {
+    //let url = `${webAPIAddress}/odata/Property?$filter=${odataFilter}`;
+    
+    let url: string;
+
+    // figure out which url to set based on the MLS API response nextLink or the initial call with odataFilter
+    if (nextLink) {
+        url = nextLink;
+    } else {
+        url = `${webAPIAddress}/odata/Property?$filter=${odataFilter}&$top=${top}&$count=true`;
+    }
 
     const response = await fetch(url, {
         method: "GET",
@@ -55,7 +79,11 @@ async function fetchMLSPropertiesBase(webAPIAddress: string | undefined, odataFi
     // get value which is an array of properties
     const propertiesList = jsonData.value;
 
-    return propertiesList.map((p: any): Property => ({
+    // get OData values for pagination
+    const totalCount = typeof jsonData["@odata.count"] === "number" ? jsonData["@odata.count"] : propertiesList.length;
+    const returnedNextLink = jsonData["@odata.nextLink"] ?? null;   
+
+    const properties = propertiesList.map((p: any): Property => ({
         id: p.ListingKey,
         address: {
             unparsedAddress: p.UnparsedAddress,
@@ -169,6 +197,11 @@ async function fetchMLSPropertiesBase(webAPIAddress: string | undefined, odataFi
         mediaImages: []
     }));
 
+    return {
+        properties: properties,
+        nextLink: returnedNextLink,
+        totalCount: totalCount
+    };
 }
 /* Function to fetch MLS Properties Room Data */
 async function fetchMLSPropertiesRoom(webAPIAddress: string | undefined, propertyIDs: string[]): Promise<Map<string, Room[]>> {
@@ -177,9 +210,6 @@ async function fetchMLSPropertiesRoom(webAPIAddress: string | undefined, propert
 
     const responses = await Promise.all(chunks.map(async (chunk) => {
         const url = `${webAPIAddress}/odata/PropertyRooms?$filter=ListingKey in (${chunk.map(id => `'${id}'`).join(",")})`;
-        console.log("Fetching properties with URL:", url);
-
-
     
         const response = await fetch(url, {
             method: "GET",
