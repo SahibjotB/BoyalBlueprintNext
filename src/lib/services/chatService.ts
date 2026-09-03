@@ -167,11 +167,13 @@ export async function handleChat(userQuery: string, context?: ChatContext): Prom
                     console.log("Initial refinement off propertylist initial");
                   }
                 // if there is refinement. return main list as the refined one and store the original and refined 
-                return { type: "property_search", properties: refinedPropertiesList, contextUpdate : {intent: intent, pendingClarification: undefined, searchState: {originalPropertyResults: propertiesList, refinedPropertyResults: refinedPropertiesList, activeSearchCriteria: mergedRequiredSearchCriteria, activeFilters: mergedActiveFilters, totalResults: totalPropertyCount, loadedCount: loadedPropertyCount, nextLink: nextLink}}};
+                return { type: "property_search", properties: refinedPropertiesList, contextUpdate : {intent: intent, pendingClarification: undefined, searchState: { originalPropertyResults: propertiesList, refinedPropertyResults: refinedPropertiesList, activeSearchCriteria: mergedRequiredSearchCriteria, activeFilters: mergedActiveFilters, totalResults: totalPropertyCount, loadedCount: loadedPropertyCount, nextLink: nextLink }}};
             }
 
             // Return array of Property objects (nothing refined)
-            return { type: "property_search", properties: propertiesList, contextUpdate : {intent: intent, pendingClarification: undefined, searchState: {originalPropertyResults: propertiesList, activeSearchCriteria: mergedRequiredSearchCriteria, activeFilters: mergedActiveFilters}}};
+            console.log("Search context state: " + JSON.stringify({ activeSearchCriteria: mergedRequiredSearchCriteria, activeFilters: mergedActiveFilters, totalResults: totalPropertyCount, loadedCount: loadedPropertyCount, nextLink: nextLink }));
+
+            return { type: "property_search", properties: propertiesList, contextUpdate : {intent: intent, pendingClarification: undefined, searchState: { originalPropertyResults: propertiesList, activeSearchCriteria: mergedRequiredSearchCriteria, activeFilters: mergedActiveFilters, totalResults: totalPropertyCount, loadedCount: loadedPropertyCount, nextLink: nextLink }}};
 
         case "real_estate":
             const realEstateResponse = await answerRealEstateQuestions(userQuery)
@@ -243,6 +245,50 @@ export async function handleChat(userQuery: string, context?: ChatContext): Prom
         case "other":
             return { type: "text", content: `this is a response for other intent with confidence: ${intent.confidence}`, contextUpdate: { pendingClarification: undefined } };
         
+        case "next_page": {
+            if (!context?.searchState?.nextLink) {
+                return { type: "text", content: "No more pages available.", contextUpdate: { intent } };
+            }
+            const mlsResult = await fetchMLSProperties(undefined, context.searchState.nextLink);
+            const newlyLoadedProperties = mlsResult.properties;
+
+            const existingProperties = context.searchState.originalPropertyResults ?? [];
+
+            const combinedProperties = [
+                ...existingProperties,
+                ...newlyLoadedProperties
+            ]
+
+            // remove duplicates
+            const uniqueProperties = Array.from(
+                new Map(combinedProperties.map(property => [property.id, property])).values()
+            );
+
+            const loadedPropertyCount = uniqueProperties.length;
+            const totalPropertyCount = mlsResult.totalCount;
+            const nextLink = mlsResult.nextLink;
+
+            console.log(`Loaded ${loadedPropertyCount} properties out of ${totalPropertyCount}. Next link: ${nextLink}`);
+
+            return {
+                type: "property_search",
+                properties: newlyLoadedProperties,
+                contextUpdate: {
+                    intent,
+                    pendingClarification: undefined,
+                    searchState: {
+                        ...context.searchState,
+                        originalPropertyResults: uniqueProperties,
+
+                        refinedPropertyResults: context.searchState.refinedPropertyResults,
+                        totalResults: totalPropertyCount,
+                        loadedCount: loadedPropertyCount,
+                        nextLink
+                    }
+                }
+            };
+        };
+
         default:
             return { type: "text", content: `could not classify intent with confidence: ${intent.confidence}`, contextUpdate: { pendingClarification: undefined } };
     }
