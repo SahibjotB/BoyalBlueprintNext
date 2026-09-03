@@ -1,6 +1,6 @@
 import { Filter } from "lucide-react";
 import { ChatResult, Intent, IntentResult, ChatContext, ActiveSearchCriteria, FilterItem, PropertyOperator, ActiveFilter } from "../types/chat";
-import { mapPropertyAddressData, Property, stripMediaData } from "../types/property";
+import { mapPropertyAddressData, Property, stripExtraData, stripMediaData } from "../types/property";
 import { buildODataQuery } from "../utils/buildFilter";
 import { extractPropertyValues } from "./ai/extractService";
 import { identifyIntent } from "./ai/intentService";
@@ -151,18 +151,18 @@ export async function handleChat(userQuery: string, context?: ChatContext): Prom
                 // if there is something to refine.. if there is an existing list, refine that list first.. if there isn't a list or its the first search with extra criteria refine the original
                 if (refinedPropertyResults != null && refinedPropertyResults.length > 0) {
                     // refining off the current user query since we already accounted for the other filters in refinement
-                    const filteredPropertyIdsResponse = await refinePropertySearch(userQuery, stripMediaData(refinedPropertyResults)); 
+                    const filteredPropertyIdsResponse = await refinePropertySearch(userQuery, stripExtraData(refinedPropertyResults)); 
                     refinedPropertiesList = refinedPropertyResults.filter(property => filteredPropertyIdsResponse.ids.includes(property.id)); 
 
                     // if refined gives 0... refine the original property list
                     if (refinedPropertiesList.length == 0 && propertiesList.length > 0) {
                         // run the refinement again with the original results to narrow that down
-                        const filteredPropertyIdsResponse = await refinePropertySearch(userQuery, stripMediaData(propertiesList)); 
+                        const filteredPropertyIdsResponse = await refinePropertySearch(userQuery, stripExtraData(propertiesList)); 
                         refinedPropertiesList = propertiesList.filter(property => filteredPropertyIdsResponse.ids.includes(property.id));
                     }
                 } else {
                     // filter off regular property list without ever using the refinement list (isn't one yet). // user query for the first refinement keeps track of all filters (since its base refinement)
-                    const filteredPropertyIdsResponse = await refinePropertySearch(improvedUserQuery, stripMediaData(propertiesList)); 
+                    const filteredPropertyIdsResponse = await refinePropertySearch(improvedUserQuery, stripExtraData(propertiesList.slice(0, 50))); 
                     refinedPropertiesList = propertiesList.filter(property => filteredPropertyIdsResponse.ids.includes(property.id));
                     console.log("Initial refinement off propertylist initial");
                   }
