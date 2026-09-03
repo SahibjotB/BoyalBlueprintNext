@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import PropertyDetailsModal from "../components/PropertyDetailsModal";
 import { Property } from "@/lib/types/property";
-import { saveProperties, getSavedProperties } from "@/lib/services/storageService";
+import { saveProperties, getSavedProperties, updateChatContext, getSavedChatContext } from "@/lib/services/storageService";
 
 interface Message {
   id: string;
@@ -16,6 +16,60 @@ interface Message {
   properties?: Property[];
   showViewOnMap?: boolean;
   hasDotPrefix?: boolean;
+}
+
+const loadingPhrases = [
+  "Searching through property database",
+  "Filtering thousands of active listings",
+  "Analyzing local market trends",
+  "Finding your perfect results"
+];
+
+function LoadingIndicator() {
+  const [phraseIndex, setPhraseIndex] = useState(0);
+  const [text, setText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    const currentPhrase = loadingPhrases[phraseIndex];
+
+    let timeout: ReturnType<typeof setTimeout>;
+
+    if (!isDeleting && text === currentPhrase) {
+      // Pause at the end of typing
+      timeout = setTimeout(() => setIsDeleting(true), 1500);
+    } else if (isDeleting && text === "") {
+      // Move to next phrase
+      setIsDeleting(false);
+      setPhraseIndex((prev) => (prev + 1) % loadingPhrases.length);
+    } else {
+      // Type or delete characters
+      const typingSpeed = isDeleting ? 30 : 60;
+      timeout = setTimeout(() => {
+        setText(currentPhrase.substring(0, text.length + (isDeleting ? -1 : 1)));
+      }, typingSpeed);
+    }
+
+    return () => clearTimeout(timeout);
+  }, [text, isDeleting, phraseIndex]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex items-center gap-3 mr-auto pl-4 py-2"
+    >
+      <div className="flex items-center gap-1.5 flex-shrink-0">
+        <span className="w-2.5 h-2.5 bg-[#E57C35]/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+        <span className="w-2.5 h-2.5 bg-[#E57C35]/80 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+        <span className="w-2.5 h-2.5 bg-[#E57C35] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+      </div>
+      <span className="text-[#E57C35] font-medium text-base md:text-lg">
+        {text}
+        <span className="animate-[pulse_1s_ease-in-out_infinite] ml-0.5">|</span>
+      </span>
+    </motion.div>
+  );
 }
 
 export default function AiSearchPage() {
@@ -58,6 +112,7 @@ export default function AiSearchPage() {
 
   // Manage html/body class overrides for layout, backgrounds and scrollbar hiding
   useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     document.documentElement.classList.add('ai-search-page');
     document.body.classList.add('ai-search-page');
 
@@ -124,10 +179,7 @@ export default function AiSearchPage() {
     setIsTyping(true);
 
     try {
-      // Gather property context from all previous message lists
-      const propertyListContext = messages.flatMap(m => m.properties || []);
-      const firstTimeRunFlag = messages.length === 0;
-
+      const savedContext = getSavedChatContext() || {};
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -135,15 +187,20 @@ export default function AiSearchPage() {
         },
         body: JSON.stringify({
           userQuery: queryText,
-          context: {
-            propertyListContext: propertyListContext.length > 0 ? propertyListContext : undefined,
-            firstTimeRunFlag
-          }
+          context: savedContext
         })
       });
 
       const data = await res.json();
       setIsTyping(false);
+
+      if (data.contextUpdate) {
+        try {
+          updateChatContext(data.contextUpdate);
+        } catch (storageError) {
+          console.warn("Could not save chat context (possibly quota exceeded):", storageError);
+        }
+      }
 
       let botText = "I found some matching listings for you.";
       let properties: Property[] = [];
@@ -164,7 +221,8 @@ export default function AiSearchPage() {
           botText = "I refined your search results.";
         }
       } else if (data.type === "clarification") {
-        botText = Array.isArray(data.content) ? data.content.join('\n') : data.content;
+        const fields = data.missingFields?.join(', ') || 'details';
+        botText = `I need a little more information. Could you please specify the following: ${fields}?`;
       }
 
       const botMsg: Message = {
@@ -352,13 +410,7 @@ export default function AiSearchPage() {
                 ))}
 
                 {/* Bot Typing Indicator */}
-                {isTyping && (
-                  <div className="flex items-center gap-1.5 mr-auto pl-4 py-2">
-                    <span className="w-2.5 h-2.5 bg-[#E57C35]/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
-                    <span className="w-2.5 h-2.5 bg-[#E57C35]/80 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
-                    <span className="w-2.5 h-2.5 bg-[#E57C35] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
-                  </div>
-                )}
+                {isTyping && <LoadingIndicator />}
               </div>
 
               {/* Suggestion pills if showing first search reply */}

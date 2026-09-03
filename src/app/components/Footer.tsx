@@ -3,18 +3,21 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import { useWebinarModal } from "./WebinarModalContext";
 
 export default function Footer() {
   const pathname = usePathname();
   const isAiSearch = pathname === '/ai-search';
   const [showFooter, setShowFooter] = useState(false);
+  const { openWebinarModal } = useWebinarModal();
 
   useEffect(() => {
+    setShowFooter(false);
     if (isAiSearch) return;
 
     const handleScroll = () => {
-      // Check if the user has scrolled to the bottom of the page
-      const isBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 50;
+      const isScrollable = document.documentElement.scrollHeight > window.innerHeight + 100;
+      const isBottom = isScrollable && (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 50);
       setShowFooter(isBottom);
     };
 
@@ -22,7 +25,7 @@ export default function Footer() {
     handleScroll(); // Initial check
     
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [pathname, isAiSearch]);
 
   if (isAiSearch) return null;
 
@@ -38,10 +41,15 @@ export default function Footer() {
       >
         <nav className="flex flex-wrap items-center justify-center gap-6 md:gap-8 font-semibold text-[15px] mb-4 md:mb-0">
           <Link href="/ai-search" className="hover:opacity-80 transition-opacity">Ai Search</Link>
-          <Link href="/calculator" className="hover:opacity-80 transition-opacity">Calculator</Link>
           <Link href="/learn" className="hover:opacity-80 transition-opacity">Learn</Link>
           <Link href="/deals" className="hover:opacity-80 transition-opacity">Deals</Link>
-          <Link href="/contact" className="hover:opacity-80 transition-opacity">Contact</Link>
+          <button
+            type="button"
+            onClick={openWebinarModal}
+            className="hover:opacity-80 transition-opacity cursor-pointer"
+          >
+            Contact
+          </button>
         </nav>
         <div className="text-[15px] text-white/90 font-medium text-center md:text-right">
           &copy; 2025 &middot; All rights reserved

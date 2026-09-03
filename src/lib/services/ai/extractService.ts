@@ -1,14 +1,13 @@
 /* Call this with user query to build system prompt to identify intent */
 
-import { ExtractLLMResult, ExtractResult, FilterItem, FilterMap} from "@/lib/types/chat";
+import { ExtractLLMResult, ExtractResult, FilterItem, FilterMap } from "@/lib/types/chat";
 import { generateOutput } from "./llmService";
-import { findRelevantAttributes } from "@/lib/utils/attributeSelector";
 import { MLS_ATTRIBUTES } from "@/lib/data/propertyAttributes";
 
-export async function extractPropertyValues(userQuery:string): Promise<ExtractResult> {
-    
+export async function extractPropertyValues(userQuery: string): Promise<ExtractResult> {
+
     // map to system prompt format
-    const relevantAttributesContext =  MLS_ATTRIBUTES
+    const relevantAttributesContext = MLS_ATTRIBUTES
 
     // Instructions for how the AI should take the user query and work with it
     const systemPrompt = `    
@@ -91,11 +90,11 @@ export async function extractPropertyValues(userQuery:string): Promise<ExtractRe
                 },
                 activeFilters: {
                     type: "array",
-                    items: { 
+                    items: {
                         type: "object",
                         properties: {
-                            key : { type: "string" },
-                            value : {
+                            key: { type: "string" },
+                            value: {
                                 anyOf: [
                                     { type: "string" },
                                     { type: "number" },
@@ -117,11 +116,11 @@ export async function extractPropertyValues(userQuery:string): Promise<ExtractRe
             additionalProperties: false
         }
     }
-    
+
     // call llm service with system prompt and user query, specify structured output with schema for expected return format
     const LLMResponse = await generateOutput<ExtractLLMResult>({ systemPrompt, userPrompt: userQuery, schema: extractResultSchema, caller: "extractService" });
     const normalizedFilters = normalizeFilters(LLMResponse.filters);
-    
+
     const extractResponse = {
         filters: normalizedFilters,
         activeFilters: LLMResponse.activeFilters,
@@ -134,8 +133,8 @@ export async function extractPropertyValues(userQuery:string): Promise<ExtractRe
 
 function normalizeFilters(filters: FilterItem[]): FilterItem[] {
 
-    return filters.map((item)=> {
-         if (item.key == "City"){
+    return filters.map((item) => {
+        if (item.key == "City") {
             item.value = (item.value as string).charAt(0).toUpperCase() + (item.value as string).slice(1).toLowerCase();
         }
         return item;

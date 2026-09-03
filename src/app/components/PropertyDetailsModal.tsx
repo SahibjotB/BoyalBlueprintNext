@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
-import { X, Heart, Share, EyeOff, MoreHorizontal, Home, Calendar, MapPin, DollarSign, Calculator, Building2 } from 'lucide-react';
+import { X, Heart, Share, EyeOff, MoreHorizontal, Home, Calendar, MapPin, DollarSign, Calculator, Building2, ChevronLeft } from 'lucide-react';
 import { Property } from '@/lib/types/property';
 
 interface PropertyDetailsModalProps {
@@ -13,6 +13,7 @@ interface PropertyDetailsModalProps {
 export default function PropertyDetailsModal({ isOpen, onClose, property }: PropertyDetailsModalProps) {
   const [isClosing, setIsClosing] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [showAllPhotos, setShowAllPhotos] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -22,6 +23,7 @@ export default function PropertyDetailsModal({ isOpen, onClose, property }: Prop
     if (isOpen) {
       document.body.style.overflow = 'hidden';
       setIsClosing(false);
+      setShowAllPhotos(false);
     } else {
       document.body.style.overflow = '';
     }
@@ -62,133 +64,190 @@ export default function PropertyDetailsModal({ isOpen, onClose, property }: Prop
 
   return createPortal(
     <div className={`fixed inset-0 z-[9999] bg-white transition-all duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${isClosing ? 'opacity-0 scale-[0.98] translate-y-8' : 'opacity-100 scale-100 translate-y-0 animate-fadeIn'}`}>
-      <div className="w-full h-full overflow-y-auto flex flex-col relative hide-scrollbar">
+      <div className={`w-full h-full overflow-y-auto flex flex-col relative ${!showAllPhotos ? 'hide-scrollbar' : ''}`}>
         {/* Header */}
-        <div className="sticky top-0 bg-white/95 backdrop-blur-sm z-[10000] px-4 md:px-8 py-5 border-b border-gray-100 flex items-center justify-between">
-          <button onClick={handleClose} className="flex items-center text-gray-500 hover:text-black transition-colors p-1 rounded-md hover:bg-gray-100 cursor-pointer">
-            <X className="w-6 h-6 md:mr-2" />
-            <span className="hidden md:inline font-semibold text-lg">Back to search</span>
-          </button>
-          
-          <div className="flex items-center gap-4 md:gap-8 text-gray-600 font-medium">
-            <button className="hidden md:flex items-center hover:text-black transition-colors"><Heart className="w-5 h-5 mr-2" /> Save</button>
-            <button className="hidden md:flex items-center hover:text-black transition-colors"><Share className="w-5 h-5 mr-2" /> Share</button>
-            <button className="hidden lg:flex items-center hover:text-black transition-colors"><EyeOff className="w-5 h-5 mr-2" /> Hide</button>
-            <button className="flex items-center hover:text-black transition-colors"><MoreHorizontal className="w-6 h-6" /></button>
+        <div className="sticky top-0 bg-white/95 backdrop-blur-sm z-[10000] px-4 md:px-8 py-4 border-b border-gray-200 flex items-center justify-between">
+          {showAllPhotos ? (
+            <button onClick={() => setShowAllPhotos(false)} className="flex items-center text-gray-700 hover:text-black transition-colors p-2 rounded-md hover:bg-gray-100 cursor-pointer">
+              <ChevronLeft className="w-5 h-5 mr-1" />
+              <span className="font-semibold text-sm">Back to listing</span>
+            </button>
+          ) : (
+            <button onClick={handleClose} className="flex items-center text-gray-500 hover:text-black transition-colors p-1 rounded-md hover:bg-gray-100 cursor-pointer">
+              <X className="w-6 h-6 md:mr-2" />
+              <span className="hidden md:inline font-semibold text-lg">Back to search</span>
+            </button>
+          )}
+
+          <div className="flex items-center gap-4 md:gap-8 text-gray-600 font-medium text-sm">
+            <button className="hidden md:flex items-center hover:text-black transition-colors"><Heart className="w-4 h-4 mr-1.5" /> Save</button>
+            <button className="hidden md:flex items-center hover:text-black transition-colors"><Share className="w-4 h-4 mr-1.5" /> Share</button>
+            <button className="hidden lg:flex items-center hover:text-black transition-colors"><EyeOff className="w-4 h-4 mr-1.5" /> Hide</button>
+            <button className="flex items-center hover:text-black transition-colors"><MoreHorizontal className="w-5 h-5" /> <span className="ml-1 hidden md:inline">More</span></button>
           </div>
         </div>
 
-        {/* Content Body */}
-        <div className="max-w-[1600px] mx-auto w-full p-4 md:p-8 lg:p-10 flex flex-col gap-10">
-          
-          {/* Images Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 h-[350px] md:h-[600px]">
-            {/* Main Image */}
-            <div className="relative w-full h-full md:col-span-3 rounded-xl overflow-hidden cursor-pointer group">
-              <Image
-                src={mainImage}
-                alt="Main"
-                fill
-                className="object-cover group-hover:scale-[1.02] transition-transform duration-700"
-                sizes="(max-width: 768px) 100vw, 75vw"
-              />
-              <div className="absolute top-6 left-6 bg-white px-4 py-2 rounded-md text-sm font-bold flex items-center shadow-lg">
-                <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div> For sale
-              </div>
+        {showAllPhotos ? (
+          /* All Photos View */
+          <div className="flex flex-col lg:flex-row flex-1 overflow-hidden bg-white">
+            {/* Left Side: Photos */}
+            <div className="flex-1 overflow-y-auto p-4 md:p-8 flex flex-col gap-4 items-center hide-scrollbar">
+              {mediaImages.length > 0 ? mediaImages.map((img: string, idx: number) => (
+                <div key={idx} className="w-full max-w-5xl relative">
+                  <Image
+                    src={img}
+                    alt={`Photo ${idx + 1}`}
+                    width={1200}
+                    height={800}
+                    className="w-full h-auto rounded-lg object-contain bg-gray-50"
+                    sizes="(max-width: 1024px) 100vw, 70vw"
+                  />
+                </div>
+              )) : (
+                <div className="w-full max-w-5xl">
+                  <Image
+                    src={mainImage}
+                    alt="Main Photo"
+                    width={1200}
+                    height={800}
+                    className="w-full h-auto rounded-lg object-contain bg-gray-50"
+                  />
+                </div>
+              )}
             </div>
-            {/* Side Images */}
-            <div className="hidden md:grid grid-rows-2 gap-3 h-full">
-              <div className="relative w-full h-full rounded-xl overflow-hidden cursor-pointer group">
-                <Image
-                  src={sideImage1}
-                  alt="Side 1"
-                  fill
-                  className="object-cover group-hover:scale-[1.02] transition-transform duration-700"
-                  sizes="(max-width: 768px) 50vw, 25vw"
-                />
+
+            {/* Right Side: Details Sidebar */}
+            <div className="w-full lg:w-[380px] flex-shrink-0 border-t lg:border-t-0 lg:border-l border-gray-200 bg-white p-6 flex flex-col z-10 lg:sticky lg:top-0 lg:h-[calc(100vh-65px)] lg:overflow-y-auto">
+              <h2 className="text-3xl font-bold text-gray-900 mb-1">{formatPrice(property?.listPrice)}</h2>
+              <div className="flex items-center gap-3 text-gray-800 text-lg mb-2">
+                <span><span className="font-bold">{totalBeds}</span> bd</span>
+                <span><span className="font-bold">{totalBaths}</span> ba</span>
+                <span><span className="font-bold">{property?.rawSqftTotal || '--'}</span> sqft</span>
               </div>
-              <div className="relative w-full h-full rounded-xl overflow-hidden cursor-pointer group">
-                <Image
-                  src={sideImage2}
-                  alt="Side 2"
-                  fill
-                  className="object-cover group-hover:scale-[1.02] transition-transform duration-700"
-                  sizes="(max-width: 768px) 50vw, 25vw"
-                />
-                <button className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm px-4 py-2.5 font-bold text-sm rounded-lg shadow-xl hover:bg-white flex items-center border border-gray-100 transition-colors">
-                  <MoreHorizontal className="w-4 h-4 mr-2" /> See all {mediaImages.length > 0 ? mediaImages.length : 45} photos
+              <p className="text-blue-600 hover:underline cursor-pointer mb-6">{addressStr}</p>
+
+              <div className="flex flex-col gap-3">
+                <button className="w-full bg-[#006AFF] hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition-colors flex flex-col items-center">
+                  <span>Request a tour</span>
+                  <span className="text-xs font-normal">as early as today at 2:30 pm</span>
+                </button>
+                <button className="w-full bg-white border border-[#006AFF] text-[#006AFF] hover:bg-blue-50 font-bold py-3 rounded-lg transition-colors">
+                  Contact agent
                 </button>
               </div>
             </div>
           </div>
+        ) : (
+          /* Main Details View */
+          <div className="max-w-[1600px] mx-auto w-full p-4 md:p-8 lg:p-10 flex flex-col gap-10">
 
-          {/* Details Section */}
-          <div className="flex flex-col lg:flex-row justify-between items-start gap-10 lg:gap-16">
-            <div className="flex-1 w-full">
-              <h2 className="text-4xl md:text-6xl font-bold text-gray-900 mb-3 tracking-tight">{formatPrice(property?.listPrice)}</h2>
-              <p className="text-xl md:text-2xl text-gray-600 mb-6">{addressStr}</p>
-              <div className="text-[#E5A57A] font-semibold flex items-center mb-10 cursor-pointer hover:underline w-max text-lg">
-                <DollarSign className="w-5 h-5 mr-2 bg-[#E5A57A] text-white rounded-full p-[2px]" /> Get pre-qualified
+            {/* Images Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 h-[350px] md:h-[600px]">
+              {/* Main Image */}
+              <div className="relative w-full h-full md:col-span-3 rounded-xl overflow-hidden cursor-pointer group" onClick={() => setShowAllPhotos(true)}>
+                <Image
+                  src={mainImage}
+                  alt="Main"
+                  fill
+                  className="object-cover group-hover:scale-[1.02] transition-transform duration-700"
+                  sizes="(max-width: 768px) 100vw, 75vw"
+                />
               </div>
-              
-              {/* Grid of details */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5 mb-12">
-                <div className="flex items-center gap-4 bg-gray-50/80 hover:bg-gray-50 p-5 rounded-xl border border-gray-100 transition-colors">
-                  <Home className="w-6 h-6 text-gray-400 flex-shrink-0" /> <span className="text-gray-700 font-medium text-lg">{propertyType}</span>
+              {/* Side Images */}
+              <div className="hidden md:grid grid-rows-2 gap-3 h-full">
+                <div className="relative w-full h-full rounded-xl overflow-hidden cursor-pointer group" onClick={() => setShowAllPhotos(true)}>
+                  <Image
+                    src={sideImage1}
+                    alt="Side 1"
+                    fill
+                    className="object-cover group-hover:scale-[1.02] transition-transform duration-700"
+                    sizes="(max-width: 768px) 50vw, 25vw"
+                  />
                 </div>
-                <div className="flex items-center gap-4 bg-gray-50/80 hover:bg-gray-50 p-5 rounded-xl border border-gray-100 transition-colors">
-                  <Calendar className="w-6 h-6 text-gray-400 flex-shrink-0" /> <span className="text-gray-700 font-medium text-lg">{yearBuilt}</span>
-                </div>
-                <div className="flex items-center gap-4 bg-gray-50/80 hover:bg-gray-50 p-5 rounded-xl border border-gray-100 transition-colors">
-                  <MapPin className="w-6 h-6 text-gray-400 flex-shrink-0" /> <span className="text-gray-700 font-medium text-lg">{lotSize}</span>
-                </div>
-                <div className="flex items-center gap-4 bg-gray-50/80 hover:bg-gray-50 p-5 rounded-xl border border-gray-100 transition-colors">
-                  <Calculator className="w-6 h-6 text-gray-400 flex-shrink-0" /> <span className="text-gray-700 font-medium text-lg">{property?.taxAnnualAmount ? `C$${property.taxAnnualAmount.toLocaleString()} Taxes` : 'Taxes Unknown'}</span>
-                </div>
-                <div className="flex items-center gap-4 bg-gray-50/80 hover:bg-gray-50 p-5 rounded-xl border border-gray-100 transition-colors">
-                  <Building2 className="w-6 h-6 text-gray-400 flex-shrink-0" /> <span className="text-gray-700 font-medium text-lg">C${sqftPrice}/sqft</span>
-                </div>
-                <div className="flex items-center gap-4 bg-gray-50/80 hover:bg-gray-50 p-5 rounded-xl border border-gray-100 transition-colors">
-                  <Home className="w-6 h-6 text-gray-400 flex-shrink-0" /> <span className="text-gray-700 font-medium text-lg">{hoaFee}</span>
-                </div>
-              </div>
-
-              {/* What's special */}
-              <div>
-                <h3 className="text-2xl md:text-3xl font-bold mb-6 text-gray-900 tracking-tight">What's special</h3>
-                <div className="flex flex-wrap gap-3">
-                  {propertyFeatures.length > 0 ? propertyFeatures.map((feat: string, idx: number) => (
-                    <span key={idx} className="bg-gray-100 px-4 py-2 rounded-md text-sm md:text-base font-bold text-gray-800 tracking-wide uppercase shadow-sm">{feat}</span>
-                  )) : (
-                    <span className="text-gray-500 italic">No special features listed</span>
-                  )}
+                <div className="relative w-full h-full rounded-xl overflow-hidden cursor-pointer group" onClick={() => setShowAllPhotos(true)}>
+                  <Image
+                    src={sideImage2}
+                    alt="Side 2"
+                    fill
+                    className="object-cover group-hover:scale-[1.02] transition-transform duration-700"
+                    sizes="(max-width: 768px) 50vw, 25vw"
+                  />
+                  <button className="absolute bottom-4 right-4 bg-white/95 text-black backdrop-blur-sm px-4 py-2.5 font-bold text-sm rounded-lg shadow-xl hover:bg-white flex items-center border border-gray-100 transition-colors">
+                    <MoreHorizontal className="w-4 h-4 mr-2" /> See all {mediaImages.length > 0 ? mediaImages.length : 45} photos
+                  </button>
                 </div>
               </div>
-
             </div>
 
-            {/* Right Sidebar */}
-            <div className="w-full lg:w-[400px] flex flex-col gap-8 lg:sticky lg:top-28 bg-white p-8 rounded-2xl border border-gray-200 shadow-[0_8px_30px_rgba(0,0,0,0.04)]">
-              <div className="flex justify-around items-center px-2">
-                <div className="text-center">
-                  <div className="text-4xl font-bold text-gray-900">{totalBeds}</div>
-                  <div className="text-gray-500 font-medium mt-1">beds</div>
+            {/* Details Section */}
+            <div className="flex flex-col lg:flex-row justify-between items-start gap-10 lg:gap-16">
+              <div className="flex-1 w-full">
+                <h2 className="text-4xl md:text-6xl font-bold text-gray-900 mb-3 tracking-tight">{formatPrice(property?.listPrice)}</h2>
+                <p className="text-xl md:text-2xl text-gray-600 mb-6">{addressStr}</p>
+                <div className="text-[#E5A57A] font-semibold flex items-center mb-10 cursor-pointer hover:underline w-max text-lg">
+                  <DollarSign className="w-5 h-5 mr-2 bg-[#E5A57A] text-white rounded-full p-[2px]" /> Get pre-qualified
                 </div>
-                <div className="w-px h-12 bg-gray-200"></div>
-                <div className="text-center">
-                  <div className="text-4xl font-bold text-gray-900">{totalBaths}</div>
-                  <div className="text-gray-500 font-medium mt-1">baths</div>
+
+                {/* Grid of details */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5 mb-12">
+                  <div className="flex items-center gap-4 bg-gray-50/80 hover:bg-gray-50 p-5 rounded-xl border border-gray-100 transition-colors">
+                    <Home className="w-6 h-6 text-gray-400 flex-shrink-0" /> <span className="text-gray-700 font-medium text-lg">{propertyType}</span>
+                  </div>
+                  <div className="flex items-center gap-4 bg-gray-50/80 hover:bg-gray-50 p-5 rounded-xl border border-gray-100 transition-colors">
+                    <Calendar className="w-6 h-6 text-gray-400 flex-shrink-0" /> <span className="text-gray-700 font-medium text-lg">{yearBuilt}</span>
+                  </div>
+                  <div className="flex items-center gap-4 bg-gray-50/80 hover:bg-gray-50 p-5 rounded-xl border border-gray-100 transition-colors">
+                    <MapPin className="w-6 h-6 text-gray-400 flex-shrink-0" /> <span className="text-gray-700 font-medium text-lg">{lotSize}</span>
+                  </div>
+                  <div className="flex items-center gap-4 bg-gray-50/80 hover:bg-gray-50 p-5 rounded-xl border border-gray-100 transition-colors">
+                    <Calculator className="w-6 h-6 text-gray-400 flex-shrink-0" /> <span className="text-gray-700 font-medium text-lg">{property?.taxAnnualAmount ? `C$${property.taxAnnualAmount.toLocaleString()} Taxes` : 'Taxes Unknown'}</span>
+                  </div>
+                  <div className="flex items-center gap-4 bg-gray-50/80 hover:bg-gray-50 p-5 rounded-xl border border-gray-100 transition-colors">
+                    <Building2 className="w-6 h-6 text-gray-400 flex-shrink-0" /> <span className="text-gray-700 font-medium text-lg">C${sqftPrice}/sqft</span>
+                  </div>
+                  <div className="flex items-center gap-4 bg-gray-50/80 hover:bg-gray-50 p-5 rounded-xl border border-gray-100 transition-colors">
+                    <Home className="w-6 h-6 text-gray-400 flex-shrink-0" /> <span className="text-gray-700 font-medium text-lg">{hoaFee}</span>
+                  </div>
                 </div>
+
+                {/* What's special */}
+                <div>
+                  <h3 className="text-2xl md:text-3xl font-bold mb-6 text-gray-900 tracking-tight">What's special</h3>
+                  <div className="flex flex-wrap gap-3">
+                    {propertyFeatures.length > 0 ? propertyFeatures.map((feat: string, idx: number) => (
+                      <span key={idx} className="bg-gray-100 px-4 py-2 rounded-md text-sm md:text-base font-bold text-gray-800 tracking-wide uppercase shadow-sm">{feat}</span>
+                    )) : (
+                      <span className="text-gray-500 italic">No special features listed</span>
+                    )}
+                  </div>
+                </div>
+
               </div>
-              <button className="w-full bg-[#E5A57A] hover:bg-[#D9956A] text-white font-bold py-4 rounded-xl transition-colors shadow-md text-xl">
-                Contact agent
-              </button>
+
+              {/* Right Sidebar */}
+              <div className="w-full lg:w-[400px] flex flex-col gap-8 lg:sticky lg:top-28 bg-white p-8 rounded-2xl border border-gray-200 shadow-[0_8px_30px_rgba(0,0,0,0.04)]">
+                <div className="flex justify-around items-center px-2">
+                  <div className="text-center">
+                    <div className="text-4xl font-bold text-gray-900">{totalBeds}</div>
+                    <div className="text-gray-500 font-medium mt-1">beds</div>
+                  </div>
+                  <div className="w-px h-12 bg-gray-200"></div>
+                  <div className="text-center">
+                    <div className="text-4xl font-bold text-gray-900">{totalBaths}</div>
+                    <div className="text-gray-500 font-medium mt-1">baths</div>
+                  </div>
+                </div>
+                <button className="w-full bg-[#E5A57A] hover:bg-[#D9956A] text-white font-bold py-4 rounded-xl transition-colors shadow-md text-xl">
+                  Contact agent
+                </button>
+              </div>
             </div>
+
           </div>
-          
-        </div>
+        )}
       </div>
     </div>,
     document.body
   );
 }
+

@@ -57,7 +57,7 @@ export async function handleChat(userQuery: string, context?: ChatContext): Prom
 
             // check extracted missing fields against the merged extracted fields and previous context fields. removing any that are present already
             let missingFields = [...propertyFilterExtractionResult.missingFields];
-            
+
             missingFields = missingFields.filter(field => {
                 switch (field) {
                     case "City":
@@ -179,17 +179,17 @@ export async function handleChat(userQuery: string, context?: ChatContext): Prom
             const realEstateResponse = await answerRealEstateQuestions(userQuery)
             return { type: "text", content: realEstateResponse.response, contextUpdate: { pendingClarification: undefined } };
 
-        case "specific_property": 
+        case "specific_property":
             // check if there's a property list to search against
             if (!context?.searchState?.originalPropertyResults || context.searchState.originalPropertyResults.length == 0) {
-                return { type: "text", content: "No property search results to reference for your question", contextUpdate: { pendingClarification: undefined }};
+                return { type: "text", content: "No property search results to reference for your question", contextUpdate: { pendingClarification: undefined } };
             }
 
             // check to see if its clarifying from previous context
             if (context?.pendingClarification?.type == "property_selection") {
                 userQuery = `${context.pendingClarification.originalQuestion} ${userQuery}`;
             }
-        
+
             // check to see if there is new address context
             // search for property out of the given list of properties using the property address street name 
             const propertyAddressContextList = mapPropertyAddressData(context.searchState?.originalPropertyResults);
@@ -197,7 +197,7 @@ export async function handleChat(userQuery: string, context?: ChatContext): Prom
             const identifiedProperties = context.searchState.originalPropertyResults.filter(property => identifiedPropertyResponse.ids.includes(property.id));
 
             let targetProperties: Property[] = [];
-            
+
             // check to see if this new one is a comparison to a previous context property question (exists in selected properties)
 
             if (identifiedProperties.length > 0 && context?.selectedProperties?.length && isComparisonBased(userQuery)) {
@@ -208,7 +208,7 @@ export async function handleChat(userQuery: string, context?: ChatContext): Prom
                 for (const property of context.selectedProperties) {
                     merged.set(property.id, property);
                 }
-                
+
                 // same for all properties that were passed in from query extraction finding
                 for (const property of identifiedProperties) {
                     merged.set(property.id, property);
@@ -216,24 +216,24 @@ export async function handleChat(userQuery: string, context?: ChatContext): Prom
 
                 // convert this into target array with just the values to answer the question about
                 targetProperties = Array.from(merged.values());
-            // if it finds properties directly from the query, just use those (replacing the previous since its not comparison based)
+                // if it finds properties directly from the query, just use those (replacing the previous since its not comparison based)
             } else if (identifiedProperties.length > 0) {
                 targetProperties = identifiedProperties
-            // if there isn't any properties in this user query but some in past context then use that to answer questions
+                // if there isn't any properties in this user query but some in past context then use that to answer questions
             } else if (context?.selectedProperties?.length && identifiedProperties.length === 0 && !isComparisonBased(userQuery)) {
                 targetProperties = context.selectedProperties;
             } else {
-                return { type: "text", content: "Couldn't find the property you're asking about from the list. Please try again",  contextUpdate: { pendingClarification: undefined }};      
+                return { type: "text", content: "Couldn't find the property you're asking about from the list. Please try again", contextUpdate: { pendingClarification: undefined } };
             }
 
             // if its ambiguious since there is previously multiple properties in history, then ask user which one
-        
+
             // if there's multiple properties in the identified Target list but the current query doesn't identify any of them. we have to figure out how to answer the question regarding those
             if (targetProperties.length > 1 && identifiedProperties.length === 0) {
                 const addresses = targetProperties.map(p => p.address.unparsedAddress).join(" or ");
 
                 // question the user with a response
-                return {type: "text", content: `which property are you referring to: ${addresses}?`, contextUpdate: {intent, selectedProperties: targetProperties, pendingClarification: { type: "property_selection", originalQuestion: userQuery }}};
+                return { type: "text", content: `which property are you referring to: ${addresses}?`, contextUpdate: { intent, selectedProperties: targetProperties, pendingClarification: { type: "property_selection", originalQuestion: userQuery } } };
             }
 
             // call function, pass these things --> that function has the system prompt for it and calls the LLM and returns the response for that specific property question
@@ -353,7 +353,7 @@ function buildMLSBaseFilters(criteria: ActiveSearchCriteria): FilterItem[] {
 }
 
 // check if user is asking to compare new properties to previous ones in context
-function isComparisonBased (userQuery: string): boolean {
+function isComparisonBased(userQuery: string): boolean {
     const query = userQuery.toLowerCase();
 
     return [
@@ -383,7 +383,7 @@ function mergeActiveFilters(existing: ActiveFilter[], currentQuery: ActiveFilter
     for (const filter of currentQuery) {
         combineMap.set(filter.key, filter);
     }
-    
+
     // flatten this combined map that has all unique keys to get an array of activeFilters we originally had
     return Array.from(combineMap.values());
 }
@@ -393,6 +393,6 @@ function buildFilterContext(filters: ActiveFilter[]) {
     if (!filters || filters.length == 0) return "";
 
     return filters
-        .map (filter => `-${filter.key}: ${JSON.stringify(filter.value)})`)
+        .map(filter => `-${filter.key}: ${JSON.stringify(filter.value)})`)
         .join("\n");
 }
