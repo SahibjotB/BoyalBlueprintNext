@@ -3,9 +3,9 @@
 
 import { PropertyRefinementResult } from "@/lib/types/chat";
 import { generateOutput } from "./llmService";
-import { PropertyWithoutMedia } from "@/lib/types/property";
+import { PropertyWithoutExtraData } from "@/lib/types/property";
 
-export async function refinePropertySearch (userQuery: string, propertyList: PropertyWithoutMedia[]): Promise<PropertyRefinementResult> {
+export async function refinePropertySearch (userQuery: string, propertyList: PropertyWithoutExtraData[]): Promise<PropertyRefinementResult> {
 
     // Instructions for how the AI should take the user query and work with it
     const systemPrompt = 
