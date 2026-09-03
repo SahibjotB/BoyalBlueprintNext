@@ -18,6 +18,8 @@ export async function extractPropertyValues(userQuery: string): Promise<ExtractR
         1) MLS Filters (used for database search)
         - ONLY use MLS attributes from the provided list: ${relevantAttributesContext}
         - THIS Currently Only INCLUDES: ListPrice, City. EVERYTHING ELSE is an ACTIVE FILTER 
+          - City can only be 1 word: if it includes directions like {Brampton}{East}. Only use the root city name like {Brampton}.
+          - There are multiple cities that are likely to come up as reference: {Toronto, Brampton, Markham, Ajax, Pickering, Hamilton, Oshawa, Milton, Oakville, Caledon, Missisauga, Richmond Hill, Vaughan}
         - Convert natural language into structured filters
         - Boolean fields is true/false
         - Numbers must be numbers (convert common formats like "500k" to 500000)
@@ -43,7 +45,7 @@ export async function extractPropertyValues(userQuery: string): Promise<ExtractR
           - "backyard, outdoor space"
           - "proximity to amenities like parks, schools, shopping"
           - "More than 4 bedrooms"
-        - Add any of these active filters that are mentioned in the user query to the activeFilters array in the response as free-form text. Aim to categorize the property of them as the key and the user preference as the value but if its not clear just add the whole phrase as the value and use a generic key like "userPreference" or "feature". If there is ranges like "square footage greater than 2000 sqft" you can add that as an active filter with key "squareFootage" and value "greater than 2000 sqft" or something similar. The goal is to capture user preferences that may not be directly tied to MLS fields but are still important for understanding what the user is looking for in a property. If its detached home for example, categorize the key as "houseType" or something fitting, that way if its condo or apartment later we can differentiate.
+        - Add any of these active filters that are mentioned in the user query to the activeFilters array in the response as free-form text. Aim to categorize the property of them as the key and the user preference as the value but if its not clear just add the whole phrase as the value and use a generic key like "userPreference" or "feature". If there is ranges like "square footage greater than 2000 sqft" you can add that as an active filter with key "squareFootage" and value "greater than 2000 sqft" or something similar. The goal is to capture user preferences that may not be directly tied to MLS fields but are still important for understanding what the user is looking for in a property.
 
         Rules for both types of data:
         - Do not guess values
@@ -116,7 +118,7 @@ export async function extractPropertyValues(userQuery: string): Promise<ExtractR
     }
 
     // call llm service with system prompt and user query, specify structured output with schema for expected return format
-    const LLMResponse = await generateOutput<ExtractLLMResult>({ systemPrompt, userPrompt: userQuery, schema: extractResultSchema });
+    const LLMResponse = await generateOutput<ExtractLLMResult>({ systemPrompt, userPrompt: userQuery, schema: extractResultSchema, caller: "extractService" });
     const normalizedFilters = normalizeFilters(LLMResponse.filters);
 
     const extractResponse = {

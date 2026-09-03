@@ -40,6 +40,6 @@ export async function identifyIntent(userQuery:string): Promise<IntentResult> {
     }
     
     // call llm service with system prompt and user query, specify structured output with schema for expected return format
-    const response = await generateOutput<IntentResult>({ systemPrompt, userPrompt: userQuery, schema: intentResultSchema });
+    const response = await generateOutput<IntentResult>({ systemPrompt, userPrompt: userQuery, schema: intentResultSchema, caller: "intentService" });
     return response;
 }

@@ -10,12 +10,32 @@ type StructuredOutput<T> = {
         name: string;
         schema: Record<string, unknown>;
     };
+    caller?: string;
 };
 
 // This will pass in all prompting to go to OpenAI and a structured return model on the provided schema. Indicates the model to use as well. Function can tweak a lot of llm interactions
-export async function generateOutput<T>({systemPrompt, userPrompt, schema} : StructuredOutput<T>): Promise<T> {
+export async function generateOutput<T>({systemPrompt, userPrompt, schema, caller} : StructuredOutput<T>): Promise<T> {
     try {
-      
+
+        /*DEBUG LOGS */
+        const schemaString = JSON.stringify(schema.schema);
+
+        const approxInputTokens = Math.ceil(
+            (systemPrompt.length + userPrompt.length + schemaString.length)/4
+        );
+
+        console.log("========== LLM REQUEST ==========");
+        console.log("Service:", caller ?? "Unknown");
+        console.log("Model:", process.env.AZURE_OPENAI_MODEL);
+        console.log("System Prompt Chars:", systemPrompt.length);
+        console.log("User Prompt Chars:", userPrompt.length);
+        console.log("Schema Chars:", schemaString.length);
+
+        console.log(
+            "Approx Total Input Chars:",
+            approxInputTokens
+        );
+            
         const response = await openAIClient.responses.create({
             // can declare model selection and parameters here
             model: process.env.AZURE_OPENAI_MODEL,
@@ -46,9 +66,37 @@ export async function generateOutput<T>({systemPrompt, userPrompt, schema} : Str
             console.error("LLM parse error with JSON:", err);
             return {} as T; // return empty object on parse failure
         }
-    } catch (error) {
-        console.error("LLM request error:", error);
+    } catch (error: any) {
+        //console.error("LLM request error:", error);
+        console.error("\n========== LLM ERROR ==========");
+            console.error("Service:", caller ?? "Unknown");
+            console.error("Status:", error.status);
+            console.error("Message:", error.message);
+
+            if (error.headers) {
+                console.error(
+                    "Remaining Requests:",
+                    error.headers.get?.("x-ratelimit-remaining-requests")
+                );
+
+                console.error(
+                    "Remaining Tokens:",
+                    error.headers.get?.("x-ratelimit-remaining-tokens")
+                );
+
+                console.error(
+                    "Token Limit:",
+                    error.headers.get?.("x-ratelimit-limit-tokens")
+                );
+
+                console.error(
+                    "Retry After:",
+                    error.headers.get?.("retry-after")
+                );
+            }
+
         return {} as T; // return empty object on request failure
+        
     }
 
 }

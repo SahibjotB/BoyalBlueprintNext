@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import Spline from '@splinetool/react-spline';
 import AiRealtor from './components/AiRealtor';
 import RentOrBuy from './components/RentOrBuy';
@@ -88,9 +89,9 @@ export default function Home() {
             </p>
 
             <div className="mt-8 flex items-center justify-center gap-4">
-              <button className="bg-[#f97316] hover:bg-[#ea580c] transition-colors text-white px-8 py-3 rounded-xl font-semibold text-lg shadow-[0_4px_10px_rgba(249,115,22,0.3)] pointer-events-auto">
+              <Link href="/login" className="bg-[#f97316] hover:bg-[#ea580c] transition-colors text-white px-8 py-3 rounded-xl font-semibold text-lg shadow-[0_4px_10px_rgba(249,115,22,0.3)] pointer-events-auto flex items-center justify-center text-center">
                 Get Started
-              </button>
+              </Link>
               <button className="bg-[#f97316] hover:bg-[#ea580c] transition-colors text-white px-8 py-3 rounded-xl font-semibold text-lg shadow-[0_4px_10px_rgba(249,115,22,0.3)] pointer-events-auto">
                 Our Services
               </button>

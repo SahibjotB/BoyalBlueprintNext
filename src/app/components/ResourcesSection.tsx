@@ -1,6 +1,12 @@
+'use client';
+
 import React from 'react';
+import Link from 'next/link';
+import { useWebinarModal } from './WebinarModalContext';
 
 export default function ResourcesSection() {
+  const { openWebinarModal } = useWebinarModal();
+
   return (
     <section className="relative w-full bg-white pb-12 lg:pb-24 overflow-hidden pt-40">
       <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8">
@@ -26,12 +32,18 @@ export default function ResourcesSection() {
               Whether you're a first-time homebuyer or a seasoned investor, our library of free resources has you covered. Sign up to get our latest guides sent directly to your inbox, or join one of our upcoming live webinars to learn from industry experts.
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
-              <button className="bg-black hover:bg-gray-800 transition-colors text-white px-8 py-3 md:py-4 rounded-none font-semibold text-[15px] lg:text-base tracking-wide h-fit">
+              <button
+                onClick={openWebinarModal}
+                className="bg-[#f97316] hover:bg-[#ea580c] transition-colors text-white px-8 py-3 md:py-4 rounded-xl font-semibold text-[15px] lg:text-base tracking-wide h-fit shadow-md hover:shadow-lg cursor-pointer"
+              >
                 Free Webinar
               </button>
-              <button className="bg-black hover:bg-gray-800 transition-colors text-white px-8 py-3 md:py-4 rounded-none font-semibold text-[15px] lg:text-base tracking-wide h-fit">
-                Get Resources
-              </button>
+              <Link
+                href="/learn"
+                className="bg-black hover:bg-gray-800 transition-colors text-white px-8 py-3 md:py-4 rounded-xl font-semibold text-[15px] lg:text-base tracking-wide h-fit cursor-pointer flex items-center justify-center text-center"
+              >
+                Free Resources
+              </Link>
             </div>
           </div>
         </div>

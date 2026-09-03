@@ -3,15 +3,24 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { User } from 'lucide-react';
+import { useWebinarModal } from './WebinarModalContext';
 
 export default function Header() {
+  const pathname = usePathname();
   const [hideHeader, setHideHeader] = useState(false);
+  const { openWebinarModal } = useWebinarModal();
+
+  useEffect(() => {
+    setHideHeader(false);
+  }, [pathname]);
 
   useEffect(() => {
     const handleScroll = () => {
-      // Check if the user has scrolled to the bottom of the page
-      const isBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 50;
+      // Only hide header at bottom if the page is scrollable beyond viewport
+      const isScrollable = document.documentElement.scrollHeight > window.innerHeight + 100;
+      const isBottom = isScrollable && (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 50);
       setHideHeader(isBottom);
     };
 
@@ -19,7 +28,7 @@ export default function Header() {
     handleScroll(); // Initial check
     
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [pathname]);
 
   return (
     <header 
@@ -43,18 +52,19 @@ export default function Header() {
           <Link href="/ai-search" className="hover:opacity-70 transition-opacity">
             Ai Search
           </Link>
-          <Link href="/calculator" className="hover:opacity-70 transition-opacity">
-            Calculator
-          </Link>
           <Link href="/learn" className="hover:opacity-70 transition-opacity">
             Learn
           </Link>
           <Link href="/deals" className="hover:opacity-70 transition-opacity">
             Deals
           </Link>
-          <Link href="/contact" className="hover:opacity-70 transition-opacity flex items-center gap-1">
+          <button
+            type="button"
+            onClick={openWebinarModal}
+            className="hover:opacity-70 transition-opacity flex items-center gap-1 cursor-pointer"
+          >
             Contact <span className="font-bold">&rarr;</span>
-          </Link>
+          </button>
         </nav>
 
         <Link
