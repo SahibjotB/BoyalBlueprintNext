@@ -8,6 +8,7 @@ export type Intent =
 | "clarification"
 | "refinement"
 | "specific_property"
+| "next_page"
 | "other";
 
 /* Types for LLM Service to return */
