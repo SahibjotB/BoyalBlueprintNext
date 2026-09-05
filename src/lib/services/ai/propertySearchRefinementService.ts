@@ -6,7 +6,7 @@ import { generateOutput } from "./llmService";
 import { PropertyWithoutExtraData } from "@/lib/types/property";
 import { chunkArray } from "@/lib/utils/arrayUtils";
 
-const BATCH_SIZE = 25 ;
+const BATCH_SIZE = 50;
 
 export async function refinePropertySearch (userQuery: string, propertyList: PropertyWithoutExtraData[]): Promise<PropertyRefinementResult> {
 
@@ -53,18 +53,18 @@ export async function refinePropertySearch (userQuery: string, propertyList: Pro
 
     // run the refinement process in batches and keep adding into the deviceID match array
     const batches = chunkArray(propertyList, BATCH_SIZE);
-    const matchingIDs: string[] = [];
 
-    for (const batch of batches) {
-
-    
+    const response = await Promise.all(batches.map((batch) => {
         // call llm service with system prompt and user query, specify structured output with schema for expected return format
         const userPrompt = `User refinement request: ${userQuery} PROPERTIES: ${JSON.stringify(batch)}`;
 
-        const response = await generateOutput<PropertyRefinementResult>({ systemPrompt, userPrompt: userPrompt, schema: refinedPropertySchema, caller: "propertyRefinementService" });
-    
-        matchingIDs.push(...response.ids);
-    }
+        return generateOutput<PropertyRefinementResult>({ systemPrompt, userPrompt: userPrompt, schema: refinedPropertySchema, caller: "propertyRefinementService" });
+
+    }));
+
+    // collect all the matching ids from the responses
+    const matchingIds = response.flatMap((res) => res.ids);
+
     // remove duplicates from the matchingids array
-    return { ids: [ ...new Set(matchingIDs) ] };
+    return { ids: [ ...new Set(matchingIds) ] };
 }
