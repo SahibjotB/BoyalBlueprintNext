@@ -6,7 +6,7 @@ import { generateOutput } from "./llmService";
 import { PropertyWithoutExtraData } from "@/lib/types/property";
 import { chunkArray } from "@/lib/utils/arrayUtils";
 
-const BATCH_SIZE = 50;
+const BATCH_SIZE = 75;
 
 export async function refinePropertySearch (userQuery: string, propertyList: PropertyWithoutExtraData[]): Promise<PropertyRefinementResult> {
 
