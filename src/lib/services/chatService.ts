@@ -162,7 +162,7 @@ export async function handleChat(userQuery: string, context?: ChatContext): Prom
                     }
                 } else {
                     // filter off regular property list without ever using the refinement list (isn't one yet). // user query for the first refinement keeps track of all filters (since its base refinement)
-                    const filteredPropertyIdsResponse = await refinePropertySearch(improvedUserQuery, stripExtraData(propertiesList.slice(0, 50))); 
+                    const filteredPropertyIdsResponse = await refinePropertySearch(improvedUserQuery, stripExtraData(propertiesList)); 
                     refinedPropertiesList = propertiesList.filter(property => filteredPropertyIdsResponse.ids.includes(property.id));
                     console.log("Initial refinement off propertylist initial");
                   }

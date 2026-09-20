@@ -4,12 +4,15 @@
 import { PropertyRefinementResult } from "@/lib/types/chat";
 import { generateOutput } from "./llmService";
 import { PropertyWithoutExtraData } from "@/lib/types/property";
+import { chunkArray } from "@/lib/utils/arrayUtils";
 
-export async function refinePropertySearch (userQuery: string, propertyList: PropertyWithoutExtraData[]): Promise<PropertyRefinementResult> {
+const BATCH_SIZE = 75;
+
+export async function refinePropertySearch(userQuery: string, propertyList: PropertyWithoutExtraData[]): Promise<PropertyRefinementResult> {
 
     // Instructions for how the AI should take the user query and work with it
-    const systemPrompt = 
-    `You are a real estate property filtering engine.
+    const systemPrompt =
+        `You are a real estate property filtering engine.
 
     Your task is to filter a list of properties based on a user's refinement request.
 
@@ -26,7 +29,7 @@ export async function refinePropertySearch (userQuery: string, propertyList: Pro
     - Do NOT include explanations or extra text
 
     You must evaluate properties based on any of the property attributes that are relevant to the user query, such as location, price, number of bedrooms, etc. The user query may include various types of refinement criteria, such as "Show me properties in downtown under $500k with at least 2 bedrooms". You need to parse the user query, identify the filtering criteria, and apply those criteria to the list of properties provided in the context to determine which properties match the user's refinement request.
-    ` 
+    `
 
     // Define the expected schema for the LLM response to ensure we get structured data back that we can work with
 
@@ -46,11 +49,23 @@ export async function refinePropertySearch (userQuery: string, propertyList: Pro
             required: ["ids"],
             additionalProperties: false
         }
-    }
-    
-    // call llm service with system prompt and user query, specify structured output with schema for expected return format
-    const userPrompt = `User refinement request: ${userQuery} PROPERTIES: ${JSON.stringify(propertyList)}`;
+    };
 
-    const response = await generateOutput<PropertyRefinementResult>({ systemPrompt, userPrompt: userPrompt, schema: refinedPropertySchema, caller: "propertyRefinementService" });
-    return response;
+    // run the refinement process in batches and keep adding into the deviceID match array
+    const batches = chunkArray(propertyList, BATCH_SIZE);
+
+    // parallel batching
+    const response = await Promise.all(batches.map((batch) => {
+        // call llm service with system prompt and user query, specify structured output with schema for expected return format
+        const userPrompt = `User refinement request: ${userQuery} PROPERTIES: ${JSON.stringify(batch)}`;
+
+        return generateOutput<PropertyRefinementResult>({ systemPrompt, userPrompt: userPrompt, schema: refinedPropertySchema, caller: "propertyRefinementService" });
+
+    }));
+
+    // collect all the matching ids from the responses
+    const matchingIds = response.flatMap((res) => res.ids);
+
+    // remove duplicates from the matchingids array
+    return { ids: [...new Set(matchingIds)] };
 }

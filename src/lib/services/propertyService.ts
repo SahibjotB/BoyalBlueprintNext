@@ -3,7 +3,7 @@ import { Property, Room, Washroom } from "../types/property";
 import { chunkArray } from "../utils/arrayUtils";
 
 
-const DEFAULT_PAGE_SIZE = 100;
+const DEFAULT_PAGE_SIZE = 150;
 
 export type MLSPagedResult = {
     properties: Property[];
