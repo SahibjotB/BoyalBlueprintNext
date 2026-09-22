@@ -57,7 +57,17 @@ async function fetchMLSPropertiesBase(webAPIAddress: string | undefined, odataFi
     if (nextLink) {
         url = nextLink;
     } else {
-        url = `${webAPIAddress}/odata/Property?$filter=${odataFilter}&$top=${top}&$count=true`;
+        // added conditions to only show active properties 
+
+        // conditions with PropertyType
+
+        // Residential Condo & Other || Residential Freehold <-- separate these out... Don't have them as active filters but MLS properties
+        // PropertyType change to subtype --> Detatched | Semi-detached | etc  <-- MAYBE MAP surity rate >0.6
+        // Bedrooms and bathrooms to reduce MLS load (not required but reduce number of properties shown)
+        // changes on refinement?? 
+
+
+        url = `${webAPIAddress}/odata/Property?$filter=${odataFilter} and (StandardStatus eq 'Active' or StandardStatus eq 'Active Under Contract') and contains(PropertyType,'Residential')&$orderby=StandardStatus&$top=${top}&$count=true`;
     }
 
     const response = await fetch(url, {
