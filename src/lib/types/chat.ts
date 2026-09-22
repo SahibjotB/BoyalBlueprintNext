@@ -119,7 +119,7 @@ export type SearchState = {
     loadedCount?: number;
     nextLink?: string | null | undefined;
 
-
+    status?: "processing" | "completed" | "cancelled" | "error";
 
 }
 
